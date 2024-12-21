@@ -40,6 +40,13 @@ env/
 htmlcov/
 .cache/
 
+# Testing
+.pytest_cache/
+coverage.xml
+.coverage.*
+.hypothesis/
+.tox/
+
 # Documentation
 docs/_build/
 docs/_static/

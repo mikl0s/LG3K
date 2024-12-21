@@ -1,7 +1,7 @@
 # **🌟 Log Generator 3000 (LG3K)**
 
 <p align="center">
-  <img src="logo.png" alt="LG3K Logo" width="700">
+  <img src="logo.png" alt="LG3K Logo - AI generated and AI background removal to make it transparent" width="700">
 </p>
 
 <h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
@@ -24,6 +24,7 @@
   <a href="https://pypi.org/project/lg3k"><img src="https://img.shields.io/pypi/dm/lg3k?style=for-the-badge" alt="Downloads"></a>
   <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/repo-size/mikl0s/LG3K?style=for-the-badge" alt="Repo Size"></a>
   <a href="https://github.com/mikl0s/LG3K/tree/main/docs"><img src="https://img.shields.io/badge/docs-sphinx-blue.svg?style=for-the-badge" alt="Documentation"></a>
+  <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/codecov/c/github/mikl0s/LG3K?style=for-the-badge" alt="Coverage"></a>
 </p>
 
 ---
@@ -72,15 +73,19 @@ We believe in the power of community! LG3K becomes more valuable with each new c
    ```bash
    python -m venv venv
    source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-   pip install -r requirements.txt
+   pip install -r requirements-dev.txt  # Installs all development dependencies
    pre-commit install
    ```
-4. Make your changes (the pre-commit hooks will ensure code quality)
-5. Write tests if applicable
-6. Update documentation if needed
-7. Commit your changes (`git commit -m 'Add feature'`)
-8. Push to your branch (`git push origin feature-name`)
-9. Open a Pull Request
+4. Run tests:
+   ```bash
+   pytest  # Runs tests with coverage report
+   ```
+5. Make your changes (the pre-commit hooks will ensure code quality)
+6. Write tests if applicable
+7. Update documentation if needed
+8. Commit your changes (`git commit -m 'Add feature'`)
+9. Push to your branch (`git push origin feature-name`)
+10. Open a Pull Request
 
 ### **Development Guidelines**
 
@@ -129,9 +134,14 @@ log_generator/
 
 ### **Prerequisites**
 - Python 3.7 or later
-- Optional: `rich` for advanced UI:
+- For users:
   ```bash
-  pip install rich
+  pip install -r requirements.txt
+  ```
+- For developers:
+  ```bash
+  pip install -r requirements-dev.txt
+  pre-commit install
   ```
 
 ---
@@ -203,7 +213,7 @@ Modify the `services` list to include the desired modules (e.g., `["web_server",
 
 ```text
 [Thread 1] ██████▉ 90% (90/100 logs)
-[Thread 2] ████��███▌ 100% (100/100 logs) Completed: logs_part2.json
+[Thread 2] ███████▌ 100% (100/100 logs) Completed: logs_part2.json
 ...
 ```
 
