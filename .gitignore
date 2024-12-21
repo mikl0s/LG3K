@@ -30,6 +30,8 @@ env/
 .vscode/
 *.swp
 *.swo
+*.code-workspace
+.history/
 
 # Misc
 .DS_Store
