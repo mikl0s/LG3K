@@ -22,7 +22,6 @@
 
 <p align="center">
   <a href="https://github.com/mikl0s/LG3K/commits/main"><img src="https://img.shields.io/github/last-commit/mikl0s/LG3K.svg?style=for-the-badge" alt="Last Commit"></a>
-  <a href="https://pypi.org/project/lg3k"><img src="https://img.shields.io/pypi/dm/lg3k?style=for-the-badge" alt="Downloads"></a>
   <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/repo-size/mikl0s/LG3K?style=for-the-badge" alt="Repo Size"></a>
   <a href="https://github.com/mikl0s/LG3K/tree/main/docs"><img src="https://img.shields.io/badge/docs-sphinx-blue.svg?style=for-the-badge" alt="Documentation"></a>
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/codecov/c/github/mikl0s/LG3K?style=for-the-badge" alt="Coverage"></a>
@@ -40,7 +39,7 @@ Curious about the full story? [Read more here](./about_log_generator.md).
 
 ---
 
-## **���� Contributing**
+## **Contributing**
 
 We believe in the power of community! LG3K becomes more valuable with each new contribution, whether it's adding new log types, improving existing ones, or enhancing the core functionality.
 
