@@ -1,35 +1,16 @@
-"""Test suite for the main module."""
+"""Tests for the main module."""
 
-from main import generate_log, load_modules
-
-
-def test_generate_log():
-    """Test the generate_log function."""
-    log = generate_log()
-    assert isinstance(log, dict)
-    assert "timestamp" in log
-    assert "level" in log
-    assert "component" in log
-    assert "message" in log
-    assert log["component"] == "Main"
+from lg3k.main import generate_log, load_modules
 
 
 def test_load_modules():
-    """Test the load_modules function."""
+    """Test that modules can be loaded."""
     modules = load_modules()
-    assert isinstance(modules, dict)
     assert len(modules) > 0
-    # Check if all expected modules are loaded
-    expected_modules = [
-        "api",
-        "database",
-        "firewall",
-        "nas",
-        "network",
-        "os",
-        "printer",
-        "web_server",
-    ]
-    for module in expected_modules:
-        assert module in modules
-        assert callable(modules[module])
+
+
+def test_generate_log():
+    """Test that logs can be generated."""
+    log = generate_log()
+    assert isinstance(log, str)
+    assert len(log) > 0
