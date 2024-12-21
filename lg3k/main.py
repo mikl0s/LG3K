@@ -1,4 +1,13 @@
-"""Main module for log generation."""
+"""Main module for log generation.
+
+This module provides the core functionality for loading and executing log generation modules.
+It handles dynamic module loading, configuration management, and the main execution flow.
+
+Functions:
+    load_modules: Load all available log generation modules.
+    generate_log: Generate a random log entry from available modules.
+    main: Execute the main log generation process.
+"""
 
 import importlib
 import os
@@ -41,11 +50,7 @@ def generate_log() -> str:
 
 
 def main():
-    """Execute the main log generation process.
-
-    This function initializes the configuration, loads the appropriate modules,
-    and coordinates the log generation process.
-    """
+    """Execute the main log generation process."""
     # Load configuration
     config = load_config("config.json")
 
@@ -64,5 +69,5 @@ def main():
     update_progress(active_modules, config)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

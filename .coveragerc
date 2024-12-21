@@ -1,0 +1,15 @@
+[run]
+source = lg3k
+omit =
+    setup.py
+    tests/*
+    docs/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    pass
+    raise ImportError

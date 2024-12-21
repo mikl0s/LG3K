@@ -1,6 +1,8 @@
 """Tests for utility functions."""
 
+import json
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +19,17 @@ def test_load_config():
     assert "components" in config
 
 
+def test_load_config_from_file(tmp_path):
+    """Test loading configuration from file."""
+    config_path = tmp_path / "config.json"
+    test_config = {"services": ["web_server"], "total_logs": 100}
+    with open(config_path, "w") as f:
+        json.dump(test_config, f)
+
+    config = load_config(str(config_path))
+    assert config == test_config
+
+
 def test_update_progress():
     """Test progress bar updates."""
     result = update_progress(50, 100)
@@ -29,7 +42,17 @@ def test_get_timestamp():
     timestamp = get_timestamp()
     assert isinstance(timestamp, str)
     # Verify timestamp format
-    try:
-        datetime.fromisoformat(timestamp)
-    except ValueError:
-        pytest.fail("Invalid timestamp format")
+    dt = datetime.fromisoformat(timestamp)
+    assert isinstance(dt, datetime)
+    # Verify it's a recent timestamp
+    now = datetime.now()
+    diff = now - dt
+    assert diff.total_seconds() < 1  # Less than 1 second difference
+
+
+def test_get_timestamp_error():
+    """Test timestamp generation with error."""
+    with patch("lg3k.utils.timestamp.datetime") as mock_dt:
+        mock_dt.now.side_effect = ValueError("Test error")
+        with pytest.raises(ValueError):
+            get_timestamp()
