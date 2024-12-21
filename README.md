@@ -23,7 +23,7 @@
   <a href="https://github.com/mikl0s/LG3K/commits/main"><img src="https://img.shields.io/github/last-commit/mikl0s/LG3K.svg?style=for-the-badge" alt="Last Commit"></a>
   <a href="https://pypi.org/project/lg3k"><img src="https://img.shields.io/pypi/dm/lg3k?style=for-the-badge" alt="Downloads"></a>
   <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/repo-size/mikl0s/LG3K?style=for-the-badge" alt="Repo Size"></a>
-  <a href="https://lg3k.readthedocs.io/"><img src="https://readthedocs.org/projects/lg3k/badge/?version=latest&style=for-the-badge" alt="Documentation Status"></a>
+  <a href="https://github.com/mikl0s/LG3K/tree/main/docs"><img src="https://img.shields.io/badge/docs-sphinx-blue.svg?style=for-the-badge" alt="Documentation"></a>
 </p>
 
 ---
@@ -203,7 +203,7 @@ Modify the `services` list to include the desired modules (e.g., `["web_server",
 
 ```text
 [Thread 1] ██████▉ 90% (90/100 logs)
-[Thread 2] ████████▌ 100% (100/100 logs) Completed: logs_part2.json
+[Thread 2] ████��███▌ 100% (100/100 logs) Completed: logs_part2.json
 ...
 ```
 
