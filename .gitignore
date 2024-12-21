@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
@@ -46,8 +47,19 @@ coverage.xml
 .coverage.*
 .hypothesis/
 .tox/
+nosetests.xml
+coverage/
 
 # Documentation
 docs/_build/
 docs/_static/
 docs/_templates/
+_build/
+_static/
+_templates/
+
+# Distribution / packaging
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt

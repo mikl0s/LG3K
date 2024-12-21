@@ -17,6 +17,7 @@
   <a href="https://black.readthedocs.io/"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code Style: Black"></a>
   <a href="https://flake8.pycqa.org/"><img src="https://img.shields.io/badge/linter-flake8-blue.svg?style=for-the-badge" alt="Linter: Flake8"></a>
   <a href="https://pycqa.github.io/isort/"><img src="https://img.shields.io/badge/imports-isort-white.svg?style=for-the-badge" alt="Imports: isort"></a>
+  <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/tests-pytest-blue.svg?style=for-the-badge" alt="Tests: pytest"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@ Curious about the full story? [Read more here](./about_log_generator.md).
 
 ---
 
-## **🤝 Contributing**
+## **���� Contributing**
 
 We believe in the power of community! LG3K becomes more valuable with each new contribution, whether it's adding new log types, improving existing ones, or enhancing the core functionality.
 
