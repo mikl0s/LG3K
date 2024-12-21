@@ -14,4 +14,7 @@ myst-parser==4.0.0
 # Testing
 pytest==8.3.4
 pytest-cov==6.0.0
-coverage==7.6.9 
+coverage==7.6.9
+
+# Build
+setuptools==69.2.0
