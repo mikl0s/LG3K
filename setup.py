@@ -9,7 +9,7 @@ setup(
     install_requires=[
         "rich>=13.7.0",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.12",
     author="Miklos",
     author_email="miklos@example.com",
     description="A versatile log generation tool",
@@ -21,11 +21,6 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
 )
