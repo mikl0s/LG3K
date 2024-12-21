@@ -7,7 +7,7 @@ setup(
     version="0.2.1",
     packages=find_packages(),
     install_requires=[
-        "rich>=13.7.0",
+        "rich==13.9.4",
     ],
     python_requires=">=3.12",
     author="Miklos",
