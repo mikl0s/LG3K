@@ -26,9 +26,7 @@
 		],
 		"[python]": {
 			"editor.formatOnSave": true,
-			"editor.codeActionsOnSave": {
-				"source.organizeImports": true
-			},
+			"editor.codeActionsOnSave": ["source.organizeImports"],
 			"editor.rulers": [88]
 		},
 		"files.exclude": {
