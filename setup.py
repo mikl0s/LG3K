@@ -4,14 +4,14 @@ from setuptools import find_packages, setup
 
 setup(
     name="lg3k",
-    version="1.0.0",
+    version="0.4.0",
     packages=find_packages(),
     install_requires=[
         "rich==13.7.0",
     ],
     python_requires=">=3.12",
-    author="Miklos",
-    author_email="miklos@example.com",
+    author="mikl0s",
+    author_email="mikkel@dataloes.dk",
     description="A versatile log generation tool",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

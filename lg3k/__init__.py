@@ -2,5 +2,5 @@
 
 from .main import generate_log, load_modules
 
-__version__ = "1.0.0"
+__version__ = "0.4.0"
 __all__ = ["generate_log", "load_modules"]
