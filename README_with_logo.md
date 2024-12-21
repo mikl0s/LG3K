@@ -2,7 +2,7 @@
 # **🌟 Log Generator 3000 (LG3K)**
 
 <p align="center">
-  <img src="A_modern,_sleek,_and_professional_logo_for_'Log_Ge.png" alt="LG3K Logo" width="400">
+  <img src="logo.png.png" alt="LG3K Logo" width="400">
 </p>
 
 <p align="center">
