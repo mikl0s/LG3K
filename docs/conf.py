@@ -9,8 +9,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Log Generator 3000"
 copyright = "2024, mikl0s"
 author = "mikl0s"
-version = "0.4.0"
-release = "0.4.0"
+version = "0.4.1"
+release = "0.4.1"
 
 # General configuration
 extensions = [
