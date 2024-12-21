@@ -25,6 +25,7 @@
   <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/repo-size/mikl0s/LG3K?style=for-the-badge" alt="Repo Size"></a>
   <a href="https://github.com/mikl0s/LG3K/tree/main/docs"><img src="https://img.shields.io/badge/docs-sphinx-blue.svg?style=for-the-badge" alt="Documentation"></a>
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/codecov/c/github/mikl0s/LG3K?style=for-the-badge" alt="Coverage"></a>
+  <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/github/actions/workflow/status/mikl0s/LG3K/ci.yml?style=for-the-badge" alt="CI"></a>
 </p>
 
 ---
