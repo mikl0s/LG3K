@@ -74,6 +74,7 @@ We believe in the power of community! LG3K becomes more valuable with each new c
    python -m venv venv
    source venv/bin/activate  # or `venv\Scripts\activate` on Windows
    pip install -r requirements-dev.txt  # Installs all development dependencies
+   pip install -e .  # Install package in development mode
    pre-commit install
    ```
 4. Run tests:
@@ -100,21 +101,21 @@ We believe in the power of community! LG3K becomes more valuable with each new c
 ## **📂 Project Structure**
 
 ```
-log_generator/
-├── main.py               # The entry point for the program
-├── modules/              # Folder containing all log generation modules
-│   ├── web_server.py     # Module for web server logs
-│   ├── database.py       # Module for database logs
-│   ├── api.py            # Module for API logs
-│   ├── firewall.py       # Module for firewall logs
-│   ├── nas.py            # Module for NAS logs
-│   ├── os.py             # Module for OS logs
-│   ├── network.py        # Module for network logs
-│   ├── printer.py        # Module for printer logs
-├── utils/                # Folder containing utility functions
-│   ├── config.py         # Utilities for configuration handling
-│   ├── progress.py       # Utilities for progress and threading
-│   ├── timestamp.py      # Timestamp generation utilities
+lg3k/
+├── __init__.py          # Package initialization
+├── modules/             # Folder containing all log generation modules
+│   ├── web_server.py    # Module for web server logs
+│   ├── database.py      # Module for database logs
+│   ├── api.py           # Module for API logs
+│   ├── firewall.py      # Module for firewall logs
+│   ├── nas.py           # Module for NAS logs
+│   ├── os.py            # Module for OS logs
+│   ├── network.py       # Module for network logs
+│   ├── printer.py       # Module for printer logs
+├── utils/               # Folder containing utility functions
+│   ├── config.py        # Utilities for configuration handling
+│   ├── progress.py      # Utilities for progress and threading
+│   ├── timestamp.py     # Timestamp generation utilities
 ```
 
 ---
@@ -133,7 +134,7 @@ log_generator/
 ## **🚀 Getting Started**
 
 ### **Prerequisites**
-- Python 3.7 or later
+- Python 3.12 or later
 - For users:
   ```bash
   pip install -r requirements.txt
@@ -141,6 +142,7 @@ log_generator/
 - For developers:
   ```bash
   pip install -r requirements-dev.txt
+  pip install -e .
   pre-commit install
   ```
 
@@ -156,12 +158,17 @@ log_generator/
 
 2. **Install dependencies:**
    ```bash
+   # For users (only rich package):
    pip install -r requirements.txt
+
+   # For developers (includes testing, linting, and documentation tools):
+   pip install -r requirements-dev.txt
+   pip install -e .
    ```
 
 3. **Run the program:**
    ```bash
-   python main.py
+   python -m lg3k
    ```
 
 ---
