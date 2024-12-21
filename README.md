@@ -4,9 +4,7 @@
   <img src="logo.png" alt="LG3K Logo" width="700">
 </p>
 
-<p>
-  <h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
-</p>
+<h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
 
 <p align="center">
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License"></a>
@@ -40,6 +38,60 @@ Curious about the full story? [Read more here](./about_log_generator.md).
 
 ---
 
+## **🤝 Contributing**
+
+We believe in the power of community! LG3K becomes more valuable with each new contribution, whether it's adding new log types, improving existing ones, or enhancing the core functionality.
+
+### **Ways to Contribute**
+
+1. **Add New Log Types** 📝
+   - Create new modules for different systems
+   - Enhance existing log formats
+   - Add more realistic log patterns
+
+2. **Improve Core Features** 🛠️
+   - Enhance performance
+   - Add new configuration options
+   - Improve error handling
+
+3. **Documentation** 📚
+   - Improve documentation
+   - Add examples
+   - Write tutorials
+
+4. **Testing** 🧪
+   - Add unit tests
+   - Report bugs
+   - Suggest improvements
+
+### **Getting Started with Contributing**
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature-name`)
+3. Set up development environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+   pip install -r requirements.txt
+   pre-commit install
+   ```
+4. Make your changes (the pre-commit hooks will ensure code quality)
+5. Write tests if applicable
+6. Update documentation if needed
+7. Commit your changes (`git commit -m 'Add feature'`)
+8. Push to your branch (`git push origin feature-name`)
+9. Open a Pull Request
+
+### **Development Guidelines**
+
+- Code is formatted with Black (88 characters line length)
+- Imports are sorted with isort
+- Code quality is checked with Flake8
+- All functions and modules have docstrings
+- Changes are covered by tests (when applicable)
+
+---
+
 ## **📂 Project Structure**
 
 ```
@@ -68,6 +120,8 @@ log_generator/
 - **Scalable and Modular**: Keep your codebase clean and maintainable by separating log logic into distinct files.
 - **Rich UI**: Enjoy a beautiful, real-time progress bar for generating logs (or use `--simple` mode for minimal output).
 - **Fully Configurable**: Modify the configuration file to control active services, total logs, threading, and more.
+- **Code Quality**: Enforced by Black, isort, and Flake8 through pre-commit hooks.
+- **Documentation**: Full documentation available on [ReadTheDocs](https://lg3k.readthedocs.io/).
 
 ---
 
@@ -160,18 +214,6 @@ Thread 1 completed generating ./logs/logs_part1.json
 Thread 2 completed generating ./logs/logs_part2.json
 ...
 ```
-
----
-
-## **🌟 Contribution**
-
-We ❤️ contributions! Add new modules or enhance the existing ones by following these steps:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature-name`).
-3. Commit your changes (`git commit -m 'Add feature'`).
-4. Push to your branch (`git push origin feature-name`).
-5. Open a Pull Request.
 
 ---
 

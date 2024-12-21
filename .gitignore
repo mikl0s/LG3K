@@ -38,3 +38,9 @@ env/
 .env
 .coverage
 htmlcov/
+.cache/
+
+# Documentation
+docs/_build/
+docs/_static/
+docs/_templates/
