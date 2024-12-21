@@ -1,5 +1,16 @@
+"""Timestamp utility module for LG3K.
 
-import time
+This module provides functionality for generating consistent timestamps
+for log entries, supporting various timestamp formats.
+"""
+
+from datetime import datetime
+
 
 def generate_timestamp():
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    """Generate a timestamp in ISO format.
+
+    Returns:
+        str: Current timestamp in ISO format (YYYY-MM-DD HH:MM:SS.mmmmmm+HH:MM).
+    """
+    return datetime.now().isoformat()

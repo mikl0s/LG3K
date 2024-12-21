@@ -1,18 +1,36 @@
+"""Firewall log generator module for LG3K.
+
+This module generates realistic firewall logs including connection attempts,
+blocked IPs, and security events.
+"""
 
 import random
+
 from utils.timestamp import generate_timestamp
 
+
 def generate_log():
+    """Generate a single firewall log entry.
+
+    Returns:
+        dict: A log entry containing timestamp, level, component, and firewall-specific details.
+    """
     timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
-    firewall = random.choice(["pfSense", "OPNsense", "iptables", "CiscoASA"])
-    if level in ["WARNING", "ERROR", "CRITICAL"]:
-        message = f"{firewall} detected unusual traffic."
-    else:
-        message = f"{firewall} is operating normally."
+    actions = ["ALLOW", "BLOCK", "DROP"]
+    protocols = ["TCP", "UDP", "ICMP"]
+    ports = [22, 80, 443, 3306, 5432]
+
+    action = random.choice(actions)
+    protocol = random.choice(protocols)
+    port = random.choice(ports)
+    ip = (
+        f"{random.randint(1, 255)}.{random.randint(0, 255)}."
+        f"{random.randint(0, 255)}.{random.randint(0, 255)}"
+    )
+
     return {
         "timestamp": timestamp,
-        "level": level,
-        "component": firewall,
-        "message": message,
+        "level": "INFO" if action == "ALLOW" else "WARNING",
+        "component": "Firewall",
+        "message": f"{action} {protocol} from {ip} on port {port}",
     }

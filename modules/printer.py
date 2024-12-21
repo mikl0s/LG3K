@@ -1,18 +1,34 @@
+"""Printer log generator module for LG3K.
+
+This module generates realistic printer logs including print jobs,
+supply levels, and printer status events.
+"""
 
 import random
+
 from utils.timestamp import generate_timestamp
 
+
 def generate_log():
+    """Generate a single printer log entry.
+
+    Returns:
+        dict: A log entry containing timestamp, level, component, and printer-specific details.
+    """
     timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
-    printer = random.choice(["HP", "Brother", "Canon", "Epson"])
-    if level in ["ERROR", "CRITICAL"]:
-        message = f"{printer} printer is out of toner."
-    else:
-        message = f"{printer} printed successfully."
+    job_types = ["document", "photo", "label", "report"]
+    statuses = ["completed", "pending", "error", "cancelled"]
+    supplies = ["black", "cyan", "magenta", "yellow"]
+
+    job = random.choice(job_types)
+    status = random.choice(statuses)
+    supply = random.choice(supplies)
+    pages = random.randint(1, 50)
+    level = random.randint(0, 100)
+
     return {
         "timestamp": timestamp,
-        "level": level,
-        "component": printer,
-        "message": message,
+        "level": "ERROR" if status == "error" else "INFO",
+        "component": "Printer",
+        "message": f"Print job ({job}, {pages} pages) {status} - {supply} at {level}%",
     }

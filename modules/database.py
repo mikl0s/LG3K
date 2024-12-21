@@ -1,26 +1,31 @@
+"""Database log generator module for LG3K.
+
+This module generates realistic database operation logs including queries,
+transactions, and performance metrics.
+"""
 
 import random
+
 from utils.timestamp import generate_timestamp
 
+
 def generate_log():
+    """Generate a single database log entry.
+
+    Returns:
+        dict: A log entry containing timestamp, level, component, and database-specific details.
+    """
     timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
-    db_type = random.choice(["PostgreSQL", "MySQL", "SQLServer"])
-    if level in ["ERROR", "CRITICAL"]:
-        error = random.choice([
-            "Connection timeout",
-            "Authentication failed",
-            "Query syntax error",
-            "Deadlock detected",
-            "Disk I/O error",
-            "Out of memory",
-        ])
-        message = f"{db_type} error: {error}"
-    else:
-        message = f"{db_type} query executed successfully."
+    operations = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRANSACTION"]
+    tables = ["users", "posts", "comments", "settings", "logs"]
+
+    operation = random.choice(operations)
+    table = random.choice(tables)
+    duration = round(random.uniform(0.001, 2.000), 3)
+
     return {
         "timestamp": timestamp,
-        "level": level,
-        "component": db_type,
-        "message": message,
+        "level": "INFO",
+        "component": "Database",
+        "message": f"DB {operation} on {table} - Duration: {duration}s",
     }

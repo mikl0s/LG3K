@@ -1,18 +1,33 @@
+"""Operating System log generator module for LG3K.
+
+This module generates realistic OS logs including system events,
+resource usage, and service status changes.
+"""
 
 import random
+
 from utils.timestamp import generate_timestamp
 
+
 def generate_log():
+    """Generate a single OS log entry.
+
+    Returns:
+        dict: A log entry containing timestamp, level, component, and OS-specific details.
+    """
     timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
-    os_type = random.choice(["Linux", "Windows", "FreeBSD", "OpenBSD"])
-    if level in ["ERROR", "CRITICAL"]:
-        message = f"{os_type} system encountered a kernel panic."
-    else:
-        message = f"{os_type} system uptime is normal."
+    resources = ["CPU", "Memory", "Disk", "Swap"]
+    services = ["sshd", "httpd", "mysqld", "nginx"]
+    events = ["started", "stopped", "restarted", "failed"]
+
+    resource = random.choice(resources)
+    service = random.choice(services)
+    event = random.choice(events)
+    usage = round(random.uniform(0, 100), 1)
+
     return {
         "timestamp": timestamp,
-        "level": level,
-        "component": os_type,
-        "message": message,
+        "level": "ERROR" if event == "failed" else "INFO",
+        "component": "OS",
+        "message": f"Service {service} {event} - {resource} usage: {usage}%",
     }

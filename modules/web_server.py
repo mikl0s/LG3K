@@ -1,15 +1,36 @@
+"""Web server log generator module for LG3K.
+
+This module generates realistic web server logs including HTTP requests,
+response codes, and performance metrics.
+"""
 
 import random
+
 from utils.timestamp import generate_timestamp
 
+
 def generate_log():
+    """Generate a single web server log entry.
+
+    Returns:
+        dict: A log entry containing timestamp, level, component, and web server-specific details.
+    """
     timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
+    methods = ["GET", "POST", "PUT", "DELETE"]
+    paths = ["/", "/about", "/contact", "/api/v1", "/docs"]
+    codes = [200, 201, 301, 304, 400, 401, 403, 404, 500]
+
+    method = random.choice(methods)
+    path = random.choice(paths)
+    code = random.choice(codes)
+    ip = (
+        f"{random.randint(1, 255)}.{random.randint(0, 255)}."
+        f"{random.randint(0, 255)}.{random.randint(0, 255)}"
+    )
+
     return {
         "timestamp": timestamp,
-        "level": level,
+        "level": "INFO" if code < 400 else "ERROR",
         "component": "WebServer",
-        "message": "Web server processed request successfully."
-        if level != "ERROR"
-        else "Web server encountered an error.",
+        "message": f"{ip} - {method} {path} - {code}",
     }
