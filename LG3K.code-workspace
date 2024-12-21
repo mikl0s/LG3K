@@ -1,0 +1,44 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "./venv/bin/python",
+		"python.analysis.extraPaths": ["./"],
+		"python.testing.pytestEnabled": true,
+		"python.testing.unittestEnabled": false,
+		"python.testing.nosetestsEnabled": false,
+		"python.testing.pytestArgs": [
+			"tests"
+		],
+		"python.formatting.provider": "black",
+		"python.formatting.blackArgs": [
+			"--line-length",
+			"88"
+		],
+		"python.linting.enabled": true,
+		"python.linting.flake8Enabled": true,
+		"python.linting.flake8Args": [
+			"--max-line-length=88",
+			"--extend-ignore=E203"
+		],
+		"[python]": {
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": true
+			},
+			"editor.rulers": [88]
+		},
+		"files.exclude": {
+			"**/__pycache__": true,
+			"**/.pytest_cache": true,
+			"**/*.pyc": true,
+			".coverage": true,
+			"htmlcov": true
+		},
+		"files.trimTrailingWhitespace": true,
+		"files.insertFinalNewline": true
+	}
+}

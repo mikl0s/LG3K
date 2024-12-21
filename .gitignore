@@ -31,7 +31,6 @@ env/
 .vscode/
 *.swp
 *.swo
-*.code-workspace
 .history/
 
 # Misc
