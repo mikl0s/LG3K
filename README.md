@@ -1,7 +1,42 @@
+# **🌟 Log Generator 3000 (LG3K)**
 
-# **🌟 Log Generator 3000 (Modularized Edition)**
+<p align="center">
+  <img src="logo.png" alt="LG3K Logo" width="700">
+</p>
 
-Welcome to **Log Generator 3000**—a fully modular log generation tool crafted entirely on an iPad. Designed to simplify testing and monitoring, it supports web servers, APIs, databases, and more. If you'd like to read the full story of how this was created, [click here](./about_log_generator.md).
+<p>
+  <h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
+</p>
+
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/stars/mikl0s/LG3K.svg?style=for-the-badge" alt="Stars"></a>
+  <a href="https://github.com/mikl0s/LG3K/issues"><img src="https://img.shields.io/github/issues/mikl0s/LG3K.svg?style=for-the-badge" alt="Issues"></a>
+</p>
+
+<p align="center">
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.7%2B-blue.svg?style=for-the-badge" alt="Python Version"></a>
+  <a href="https://black.readthedocs.io/"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code Style: Black"></a>
+  <a href="https://flake8.pycqa.org/"><img src="https://img.shields.io/badge/linter-flake8-blue.svg?style=for-the-badge" alt="Linter: Flake8"></a>
+  <a href="https://pycqa.github.io/isort/"><img src="https://img.shields.io/badge/imports-isort-white.svg?style=for-the-badge" alt="Imports: isort"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mikl0s/LG3K/commits/main"><img src="https://img.shields.io/github/last-commit/mikl0s/LG3K.svg?style=for-the-badge" alt="Last Commit"></a>
+  <a href="https://pypi.org/project/lg3k"><img src="https://img.shields.io/pypi/dm/lg3k?style=for-the-badge" alt="Downloads"></a>
+  <a href="https://github.com/mikl0s/LG3K"><img src="https://img.shields.io/github/repo-size/mikl0s/LG3K?style=for-the-badge" alt="Repo Size"></a>
+  <a href="https://lg3k.readthedocs.io/"><img src="https://readthedocs.org/projects/lg3k/badge/?version=latest&style=for-the-badge" alt="Documentation Status"></a>
+</p>
+
+---
+
+## **About**
+
+Welcome to **Log Generator 3000**—a fully modular log generation tool designed to simplify testing and monitoring across diverse systems. It supports web servers, APIs, databases, firewalls, and more.
+
+This project was conceptualized, developed, and published entirely on an iPad during a Saturday evening of football—and yes, the team we were rooting for won! 🎉
+
+Curious about the full story? [Read more here](./about_log_generator.md).
 
 ---
 
@@ -11,7 +46,6 @@ Welcome to **Log Generator 3000**—a fully modular log generation tool crafted 
 log_generator/
 ├── main.py               # The entry point for the program
 ├── modules/              # Folder containing all log generation modules
-│   ├── __init__.py       # Makes this folder a Python package
 │   ├── web_server.py     # Module for web server logs
 │   ├── database.py       # Module for database logs
 │   ├── api.py            # Module for API logs
@@ -21,7 +55,6 @@ log_generator/
 │   ├── network.py        # Module for network logs
 │   ├── printer.py        # Module for printer logs
 ├── utils/                # Folder containing utility functions
-│   ├── __init__.py       # Makes this folder a Python package
 │   ├── config.py         # Utilities for configuration handling
 │   ├── progress.py       # Utilities for progress and threading
 │   ├── timestamp.py      # Timestamp generation utilities
@@ -53,8 +86,8 @@ log_generator/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/log-generator-3000.git
-   cd log-generator-3000
+   git clone https://github.com/mikl0s/LG3K.git
+   cd LG3K
    ```
 
 2. **Install dependencies:**
@@ -150,7 +183,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## **💬 Questions?**
 
-Feel free to open an issue or contact us at `mikkel@dataloes.dk`.
+Feel free to open an issue or contact us at `support@loggenerator3000.com`.
 
 ---
 
