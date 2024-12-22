@@ -170,6 +170,8 @@ lg3k/
 - **High Volume**: Generate up to 1,000,000 log entries per module.
 - **Rich UI**: Beautiful, real-time progress bar for generating logs (or use `--simple` mode for minimal output).
 - **Fully Configurable**: Modify the configuration file to control active services, total logs, threading, and more.
+- **JSON Output Mode**: Get structured output in JSON format for easy parsing and automation.
+- **Configuration Generation**: Generate default configuration files with `--generate-config`.
 - **Code Quality**: Enforced by Black, isort, and Flake8 through pre-commit hooks.
 - **100% Test Coverage**: Comprehensive test suite ensuring reliability.
 
@@ -220,6 +222,8 @@ Looking to integrate LG3K into your application or AI model? Check out our [Deve
 - 📊 Log format specifications
 - ⚡ Performance optimization tips
 - 🧪 Integration testing strategies
+- 🛠️ Configuration file generation
+- 📋 JSON output mode usage
 
 ---
 
@@ -269,6 +273,53 @@ Starting log generation for 1000 logs across 10 files.
 Thread 1 completed generating ./logs/logs_part1.json
 Thread 2 completed generating ./logs/logs_part2.json
 ...
+```
+
+### **JSON Output Mode**
+
+Use the `--json` flag for structured output in a single line (ideal for parsing):
+
+```bash
+lg3k --count 1000 --threads 4 --json
+```
+
+This outputs a single line of JSON with detailed information (formatted here for readability):
+
+```json
+{
+    "success": true,
+    "logs_generated": 1000,
+    "time_taken": 1.23,
+    "files": ["logs/part1.json", "logs/part2.json"],
+    "stats": {
+        "total_files": 2,
+        "avg_logs_per_file": 500,
+        "total_size_bytes": 12345
+    },
+    "timing": {
+        "start_time": "2024-03-22T12:34:56.789012",
+        "duration_seconds": 1.23,
+        "logs_per_second": 813.0
+    },
+    "config": {
+        "output_directory": "logs",
+        "file_format": ".json"
+    }
+}
+```
+
+In case of errors (also single-line output):
+```json
+{
+    "success": false,
+    "logs_generated": 0,
+    "time_taken": 0.0,
+    "files": [],
+    "error": {
+        "message": "Error message here",
+        "type": "ErrorType"
+    }
+}
 ```
 
 ---
