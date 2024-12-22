@@ -16,20 +16,33 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
-venv/
+.env
+.venv
 env/
+venv/
 ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
 
 # Testing
 .coverage
@@ -37,10 +50,37 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .tox/
+.nox/
+nosetests.xml
+coverage/
+.hypothesis/
+.coveragerc
 
 # Documentation
 docs/_build/
+docs/api/
+docs/_autosummary/
 
 # Log files
 logs/
 *.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
