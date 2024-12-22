@@ -8,9 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    environment:
-      name: release
-      url: https://pypi.org/p/lg3k
+    environment: pypi
     permissions:
       contents: write
       id-token: write
