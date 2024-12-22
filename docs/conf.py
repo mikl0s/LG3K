@@ -6,14 +6,14 @@ import sys
 sys.path.insert(0, os.path.abspath(".."))
 
 # Project information
-project = "Log Generator 3000"
-copyright = "2024, mikl0s"
+project = "LG3K"
+copyright = "2023, mikl0s"
 author = "mikl0s"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.4"
+release = "0.6.5"
 # The short X.Y version
-version = "0.6.4"
+version = "0.6.5"
 
 # General configuration
 extensions = [

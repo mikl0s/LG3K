@@ -283,7 +283,7 @@ def output_json(
 
 
 @click.command()
-@click.version_option(version="0.6.4", prog_name="Log Generator 3000")
+@click.version_option(version="0.6.5", prog_name="Log Generator 3000")
 @click.option(
     "--generate-config",
     type=click.Path(),

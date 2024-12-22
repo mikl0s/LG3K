@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.4-blue?style=for-the-badge" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.5-blue?style=for-the-badge" alt="PyPI Version"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/downloads-0-blue?style=for-the-badge" alt="PyPI Downloads"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/python-3.12-blue?style=for-the-badge" alt="Python Versions"></a>
 </p>
