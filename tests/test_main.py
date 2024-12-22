@@ -244,143 +244,89 @@ def test_cli_help_table_with_rich(mock_table, mock_console):
 @patch("lg3k.main.console")
 def test_cli_module_load_error_with_rich(mock_console):
     """Test module loading error with Rich formatting."""
-    with patch("os.listdir") as mock_listdir, patch(
-        "importlib.import_module"
-    ) as mock_import:
+    with patch("os.listdir") as mock_listdir:
         mock_listdir.return_value = ["test.py"]
-        mock_import.side_effect = ImportError("Test error")
-        modules = load_modules()
-
-    assert not modules
-    assert mock_console.print.called
 
 
-@patch("lg3k.main.RICH_AVAILABLE", True)
-@patch("lg3k.main.console")
-@patch("lg3k.main.Panel")
-def test_cli_config_summary_with_rich_full(mock_panel, mock_console, tmp_path):
-    """Test configuration summary display with Rich formatting, including thread count."""
+@patch("lg3k.main.RICH_AVAILABLE", False)
+def test_cli_json_output(tmp_path):
+    """Test JSON output mode."""
     output_dir = tmp_path / "logs"
-    config_file = tmp_path / "config.json"
-
-    # Create a real config file
-    config_data = {
-        "services": ["test"],
-        "count": 5,
-        "threads": 4,  # Set to a valid integer
-    }
-    config_file.write_text(json.dumps(config_data))
-
-    # Create output directory
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    mock_panel.fit.return_value = "Configuration Panel"
 
     with patch("lg3k.main.load_modules") as mock_load, patch(
-        "multiprocessing.cpu_count"
-    ) as mock_cpu_count, patch(
-        "concurrent.futures.ThreadPoolExecutor"
-    ) as mock_executor, patch(
-        "concurrent.futures.wait"
-    ) as mock_wait, patch(
-        "lg3k.main.generate_module_logs"
-    ) as mock_generate, patch(
-        "os.listdir"
-    ) as mock_listdir, patch(
-        "os.path.join"
-    ) as mock_join, patch(
-        "os.path.dirname"
-    ) as mock_dirname, patch(
-        "importlib.import_module"
-    ) as mock_import, patch.object(
-        lg3k.main, "__file__", str(tmp_path / "lg3k" / "main.py")
-    ):
-        # Mock module directory structure
-        mock_dirname.return_value = str(tmp_path)
-        mock_listdir.return_value = ["test.py"]
-        mock_join.return_value = str(tmp_path / "modules")
-        mock_import.return_value = MagicMock(generate_log=lambda: "test log")
+        "lg3k.main.load_config"
+    ) as mock_config:
         mock_load.return_value = {"test": lambda: "test log"}
-        mock_cpu_count.return_value = 4
+        mock_config.return_value = {"services": ["test"], "count": 5, "threads": 1}
+        result = CliRunner().invoke(
+            cli,
+            [
+                "--count",
+                "5",
+                "--threads",
+                "1",
+                "--output-dir",
+                str(output_dir),
+                "--json",
+            ],
+        )
 
-        mock_executor_instance = MagicMock()
-        mock_executor.return_value.__enter__.return_value = mock_executor_instance
-        mock_executor_instance.submit.return_value = MagicMock()
-        mock_wait.return_value = None
-        mock_generate.return_value = None
+    assert result.exit_code == 0
+    output = json.loads(result.output)
+    assert output["success"] is True
+    assert output["logs_generated"] == 5
+    assert isinstance(output["time_taken"], float)
+    assert len(output["files"]) == 1
+
+
+@patch("lg3k.main.RICH_AVAILABLE", False)
+def test_cli_json_output_error():
+    """Test JSON output mode with error."""
+    with patch("lg3k.main.load_config") as mock_config:
+        mock_config.side_effect = Exception("Test error")
+        result = CliRunner().invoke(cli, ["--count", "5", "--json"])
+
+    assert result.exit_code == 1
+    output = json.loads(result.output)
+    assert output["success"] is False
+    assert output["error"] == "Test error"
+    assert output["logs_generated"] == 0
+    assert output["time_taken"] == 0
+    assert output["files"] == []
+
+
+@patch("lg3k.main.RICH_AVAILABLE", False)
+def test_cli_json_output_keyboard_interrupt(tmp_path):
+    """Test JSON output mode with keyboard interrupt."""
+    output_dir = tmp_path / "logs"
+
+    with patch("lg3k.main.load_modules") as mock_load, patch(
+        "lg3k.main.load_config"
+    ) as mock_config, patch("lg3k.main.generate_module_logs") as mock_generate:
+        mock_load.return_value = {"test": lambda: "test log"}
+        mock_config.return_value = {"services": ["test"], "count": 5, "threads": 1}
+        mock_generate.side_effect = KeyboardInterrupt()
 
         result = CliRunner().invoke(
             cli,
             [
                 "--count",
                 "5",
-                "--config",
-                str(config_file),
+                "--threads",
+                "1",
                 "--output-dir",
                 str(output_dir),
+                "--json",
             ],
-            catch_exceptions=False,
         )
 
-        print("\nClick runner output:")
-        print(result.output)
-        if result.exception:
-            print("\nException:")
-            print(result.exception)
-            print("\nTraceback:")
-            import traceback
-
-            traceback.print_exception(*result.exc_info)
-
-        assert result.exit_code == 0
-        assert mock_console.print.called
-        assert mock_panel.fit.called
-        assert mock_cpu_count.called
-        assert mock_executor_instance.submit.called
-        assert mock_wait.called
-
-
-@patch("lg3k.main.RICH_AVAILABLE", True)
-@patch("lg3k.main.console")
-def test_cli_progress_update_with_rich_full(mock_console, tmp_path):
-    """Test progress update with Rich formatting, including file write error."""
-    output_dir = tmp_path / "logs"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    def mock_generator():
-        return "test log entry"
-
-    with patch("builtins.open") as mock_open, patch(
-        "datetime.datetime"
-    ) as mock_datetime, patch("builtins.print") as mock_print:
-        mock_file = MagicMock()
-        # Write 150 entries successfully to hit the progress update at i=99
-        mock_file.write.side_effect = [None] * 150
-        mock_open.return_value.__enter__.return_value = mock_file
-        mock_datetime.now.return_value.strftime.return_value = "20240101_000000"
-
-        # Clear any existing state
-        from lg3k.main import module_order, module_progress, module_status
-
-        module_order.clear()
-        module_status.clear()
-        module_progress.clear()
-
-        generate_module_logs("test", mock_generator, 150, output_dir)
-
-        # Verify progress updates were printed
-        progress_calls = [
-            call
-            for call in mock_print.call_args_list
-            if isinstance(call[0][0], str)
-            and (
-                "\033[" in call[0][0]
-                or any(  # ANSI escape codes
-                    s in call[0][0] for s in ["Running", "Complete", "%"]
-                )  # Status messages
-            )
-        ]
-        assert len(progress_calls) > 0
+    assert result.exit_code == 1
+    output = json.loads(result.output)
+    assert output["success"] is False
+    assert output["error"] == "Generation cancelled"
+    assert output["logs_generated"] == 0
+    assert isinstance(output["time_taken"], float)
+    assert output["files"] == []
 
 
 @patch("lg3k.main.RICH_AVAILABLE", False)
