@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/github-workflow.json
 name: Release
 
 on:
@@ -8,9 +9,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/lg3k
+    environment: production
     permissions:
       contents: write
       id-token: write
