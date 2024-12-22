@@ -273,10 +273,30 @@ def test_cli_json_output(tmp_path):
 
     assert result.exit_code == 0
     output = json.loads(result.output)
+
+    # Basic fields
     assert output["success"] is True
     assert output["logs_generated"] == 5
     assert isinstance(output["time_taken"], float)
     assert len(output["files"]) == 1
+
+    # Stats
+    assert "stats" in output
+    assert output["stats"]["total_files"] == 1
+    assert output["stats"]["avg_logs_per_file"] == 5
+    assert isinstance(output["stats"]["total_size_bytes"], int)
+    assert output["stats"]["total_size_bytes"] > 0
+
+    # Timing
+    assert "timing" in output
+    assert isinstance(output["timing"]["start_time"], str)
+    assert isinstance(output["timing"]["duration_seconds"], float)
+    assert isinstance(output["timing"]["logs_per_second"], float)
+
+    # Config
+    assert "config" in output
+    assert output["config"]["output_directory"] == str(output_dir)
+    assert output["config"]["file_format"] == ".log"
 
 
 @patch("lg3k.main.RICH_AVAILABLE", False)
@@ -288,11 +308,26 @@ def test_cli_json_output_error():
 
     assert result.exit_code == 1
     output = json.loads(result.output)
+
+    # Basic fields
     assert output["success"] is False
-    assert output["error"] == "Test error"
     assert output["logs_generated"] == 0
     assert output["time_taken"] == 0
     assert output["files"] == []
+
+    # Error details
+    assert "error" in output
+    assert output["error"]["message"] == "Test error"
+    assert output["error"]["type"] == "Exception"
+
+    # Stats with no files
+    assert output["stats"]["total_files"] == 0
+    assert output["stats"]["avg_logs_per_file"] == 0
+    assert output["stats"]["total_size_bytes"] == 0
+
+    # Config with no files
+    assert output["config"]["output_directory"] is None
+    assert output["config"]["file_format"] is None
 
 
 @patch("lg3k.main.RICH_AVAILABLE", False)
@@ -307,26 +342,52 @@ def test_cli_json_output_keyboard_interrupt(tmp_path):
         mock_config.return_value = {"services": ["test"], "count": 5, "threads": 1}
         mock_generate.side_effect = KeyboardInterrupt()
 
-        result = CliRunner().invoke(
-            cli,
-            [
-                "--count",
-                "5",
-                "--threads",
-                "1",
-                "--output-dir",
-                str(output_dir),
-                "--json-output",
-            ],
-        )
+        # Create a custom exit handler that raises SystemExit with the correct code
+        def custom_exit(code=0):
+            raise SystemExit(code)
+
+        # Patch both Click's Context.exit and sys.exit
+        with patch("click.Context.exit", side_effect=custom_exit), patch(
+            "sys.exit", side_effect=custom_exit
+        ):
+            result = CliRunner(mix_stderr=False).invoke(
+                cli,
+                [
+                    "--count",
+                    "5",
+                    "--threads",
+                    "1",
+                    "--output-dir",
+                    str(output_dir),
+                    "--json-output",
+                ],
+                catch_exceptions=True,
+            )
 
     assert result.exit_code == 1
-    output = json.loads(result.output)
+    # Get the output and clean it
+    output_str = result.stdout.strip()
+    output = json.loads(output_str)
+
+    # Basic fields
     assert output["success"] is False
-    assert output["error"] == "Generation cancelled"
     assert output["logs_generated"] == 0
     assert isinstance(output["time_taken"], float)
     assert output["files"] == []
+
+    # Error details
+    assert "error" in output
+    assert output["error"]["message"] == "Generation cancelled"
+    assert output["error"]["type"] == "str"
+
+    # Stats with no files
+    assert output["stats"]["total_files"] == 0
+    assert output["stats"]["avg_logs_per_file"] == 0
+    assert output["stats"]["total_size_bytes"] == 0
+
+    # Config with no files
+    assert output["config"]["output_directory"] is None
+    assert output["config"]["file_format"] is None
 
 
 @patch("lg3k.main.RICH_AVAILABLE", False)

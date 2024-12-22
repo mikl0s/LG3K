@@ -255,10 +255,31 @@ def output_json(
         "logs_generated": logs_generated,
         "time_taken": round(time_taken, 2),
         "files": files,
+        "stats": {
+            "total_files": len(files),
+            "avg_logs_per_file": logs_generated / len(files) if files else 0,
+            "total_size_bytes": sum(Path(f).stat().st_size for f in files)
+            if files
+            else 0,
+        },
+        "timing": {
+            "start_time": datetime.now().isoformat(),
+            "duration_seconds": round(time_taken, 2),
+            "logs_per_second": round(logs_generated / time_taken, 2)
+            if time_taken > 0
+            else 0,
+        },
+        "config": {
+            "output_directory": str(Path(files[0]).parent) if files else None,
+            "file_format": Path(files[0]).suffix if files else None,
+        },
     }
     if error:
-        result["error"] = error
-    print(json.dumps(result, indent=2))
+        result["error"] = {
+            "message": str(error),
+            "type": error.__class__.__name__ if isinstance(error, Exception) else "str",
+        }
+    print(json.dumps(result), end="", file=sys.stdout, flush=True)
 
 
 @click.command()
@@ -328,6 +349,7 @@ def cli(
         generated_files = []
         total_logs = 0
         error_message = None
+        json_output_sent = False  # Flag to track if we've already output JSON
 
         # Clear any previous run files
         current_run_files.clear()
@@ -348,8 +370,9 @@ def cli(
                 with open(config_path, "w") as f:
                     json.dump(get_default_config(), f, indent=4)
 
-                if json_output:
+                if json_output and not json_output_sent:
                     output_json(True, 0, 0, [str(config_path)])
+                    json_output_sent = True
                     return
 
                 if RICH_AVAILABLE:
@@ -375,14 +398,15 @@ def cli(
             modules = load_modules()
             if not modules:
                 msg = "Error: No modules found. Please check your installation."
-                if json_output:
+                if json_output and not json_output_sent:
                     output_json(False, 0, 0, [], msg)
-                    sys.exit(1)
+                    json_output_sent = True
+                    ctx.exit(1)
                 if RICH_AVAILABLE:
                     console.print(f"[red]{msg}[/red]")
                 else:
                     print(msg)
-                sys.exit(1)
+                ctx.exit(1)
 
             # Select active services from config
             active_services = cfg.get("services", list(modules.keys()))
@@ -390,9 +414,10 @@ def cli(
 
             if not active_modules:
                 msg = "No active modules found. Check your configuration."
-                if json_output:
+                if json_output and not json_output_sent:
                     output_json(False, 0, 0, [], msg)
-                    sys.exit(1)
+                    json_output_sent = True
+                    ctx.exit(1)
                 if RICH_AVAILABLE:
                     console.print(f"[yellow]{msg}[/yellow]")
                     console.print(f"Available modules: {', '.join(modules.keys())}")
@@ -403,7 +428,7 @@ def cli(
                     print(msg)
                     print(f"Available modules: {', '.join(modules.keys())}")
                     print(f"Active services in config: {', '.join(active_services)}")
-                sys.exit(1)
+                ctx.exit(1)
 
             # Show configuration summary
             if not json_output:
@@ -484,8 +509,13 @@ def cli(
                             "\nKeep partially generated files?", default=False
                         )
                         cleanup_files(keep)
-                    if not json_output:
+                    if json_output and not json_output_sent:
+                        time_taken = (datetime.now() - start_time).total_seconds()
+                        output_json(False, 0, time_taken, [], error_message)
+                        json_output_sent = True
+                    elif not json_output:
                         print("\nExiting...")
+                    ctx.exit(1)  # Exit after handling the interrupt
                 else:
                     # Add final newline if not in JSON mode
                     if not json_output:
@@ -502,6 +532,19 @@ def cli(
                         generated_files.append(str(file_path))
                         total_logs += log_count
 
+                # Output JSON if requested
+                if json_output and not json_output_sent:
+                    time_taken = (datetime.now() - start_time).total_seconds()
+                    output_json(
+                        error_message is None,
+                        total_logs,  # Use actual total logs
+                        time_taken,
+                        generated_files,
+                        error_message,
+                    )
+                    json_output_sent = True
+                    return  # Let the function return normally for success
+
             except KeyboardInterrupt:
                 exit_event.set()
                 error_message = "Generation cancelled"
@@ -512,20 +555,13 @@ def cli(
                         "\nKeep partially generated files?", default=False
                     )
                     cleanup_files(keep)
-                if not json_output:
+                if json_output and not json_output_sent:
+                    time_taken = (datetime.now() - start_time).total_seconds()
+                    output_json(False, 0, time_taken, [], error_message)
+                    json_output_sent = True
+                elif not json_output:
                     print("\nExiting...")
-
-            # Output JSON if requested
-            if json_output:
-                time_taken = (datetime.now() - start_time).total_seconds()
-                output_json(
-                    error_message is None,
-                    0 if error_message else log_count,  # Set to 0 for errors
-                    time_taken,
-                    generated_files,
-                    error_message,
-                )
-                sys.exit(1 if error_message else 0)
+                ctx.exit(1)  # Exit after handling the interrupt
 
         except KeyboardInterrupt:
             exit_event.set()
@@ -535,21 +571,29 @@ def cli(
             ):  # Only ask if running in a terminal and not in JSON mode
                 keep = click.confirm("\nKeep partially generated files?", default=False)
                 cleanup_files(keep)
-            if not json_output:
+            if json_output and not json_output_sent:
+                time_taken = (datetime.now() - start_time).total_seconds()
+                output_json(False, 0, time_taken, [], error_message)
+                json_output_sent = True
+            elif not json_output:
                 print("\nExiting...")
+            ctx.exit(1)  # Exit after handling the interrupt
 
     except Exception as e:
-        error_message = str(e)
-        if json_output:
+        error_message = (
+            str(e) if isinstance(e, click.exceptions.Exit) else e
+        )  # Convert Exit object to string
+        if json_output and not json_output_sent:
             output_json(False, 0, 0, [], error_message)
-            sys.exit(1)
-        else:
-            msg = f"Error: {error_message}"
+            json_output_sent = True
+            ctx.exit(1)  # Exit after handling the error
+        elif not json_output:
+            msg = f"Error: {str(error_message)}"
             if RICH_AVAILABLE:
                 console.print(f"[red]{msg}[/red]")
             else:
                 print(msg)
-            sys.exit(1)
+            ctx.exit(1)  # Exit after handling the error
 
 
 def main():
