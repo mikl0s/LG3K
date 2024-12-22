@@ -7,13 +7,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-import lg3k.main
+from lg3k import main
 from lg3k.main import (
     cli,
     format_progress_display,
     generate_module_logs,
     load_modules,
-    main,
+    module_status,
     show_rich_help,
     update_progress_display,
 )
@@ -220,7 +220,9 @@ def test_cli_progress_update(mock_panel, mock_console, tmp_path):
 def test_main():
     """Test main entry point."""
     with patch("lg3k.main.cli") as mock_cli:
-        main()
+        from lg3k.main import main as main_func
+
+        main_func()
         mock_cli.assert_called_once()
 
 
@@ -393,17 +395,20 @@ def test_cli_json_output_keyboard_interrupt(tmp_path):
 @patch("lg3k.main.RICH_AVAILABLE", False)
 def test_cli_help_no_rich():
     """Test CLI help output without Rich, ensuring the import error message is shown."""
-    with patch("builtins.print") as mock_print:
-        # Re-import to trigger the ImportError handling
-        with patch.dict(
-            "sys.modules",
-            {"rich.console": None, "rich.table": None, "rich.panel": None},
-        ):
-            import importlib
+    # Re-import to trigger the ImportError handling
+    with patch.dict(
+        "sys.modules",
+        {"rich.console": None, "rich.table": None, "rich.panel": None},
+    ):
+        import importlib
 
-            importlib.reload(lg3k.main)
-            assert mock_print.called
-            assert "Install 'rich' package" in mock_print.call_args[0][0]
+        import lg3k.main
+
+        importlib.reload(lg3k.main)
+        runner = CliRunner()
+        result = runner.invoke(lg3k.main.cli, ["--help"])
+        assert result.exit_code == 0
+        assert "Rich library not available" in result.output
 
 
 @patch("lg3k.main.RICH_AVAILABLE", True)
@@ -615,16 +620,14 @@ def test_generate_module_logs_error():
     import tempfile
     from pathlib import Path
 
-    from lg3k.main import generate_module_logs, module_status
-
     def failing_generator():
         raise Exception("Test error")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
-        with pytest.raises(Exception):
-            generate_module_logs("test_module", failing_generator, 10, output_dir)
-        assert "Error" in module_status["test_module"]
+        with pytest.raises(Exception, match="Test error"):
+            generate_module_logs("test_module", failing_generator, 5, output_dir)
+        assert module_status["test_module"].startswith("Error:")
 
 
 def test_format_progress_display_all_states():
@@ -719,3 +722,136 @@ def test_generate_module_logs_exit_event():
         # Clean up
         exit_event.clear()
         current_run_files.clear()
+
+
+def test_generate_llm_format_log_error():
+    """Test generating LLM format for error logs."""
+    log_entry = {
+        "level": "ERROR",
+        "service": "api",
+        "message": "Connection refused",
+        "type": "ConnectionError",
+        "timestamp": "2024-01-01T12:00:00Z",
+    }
+    result = main.generate_llm_format_log(log_entry)
+    assert (
+        result["instruction"]
+        == "Analyze this log entry and identify any anomalies or patterns"
+    )
+    assert json.loads(result["input"]) == log_entry
+    assert "error-level log" in result["output"]
+    assert "Connection refused" in result["output"]
+    assert "ConnectionError" in result["output"]
+    assert "2024-01-01T12:00:00Z" in result["output"]
+
+
+def test_generate_llm_format_log_info():
+    """Test generating LLM format for info logs."""
+    log_entry = {
+        "level": "INFO",
+        "service": "database",
+        "message": "Query executed successfully",
+        "timestamp": "2024-01-01T12:00:00Z",
+    }
+    result = main.generate_llm_format_log(log_entry)
+    assert (
+        result["instruction"]
+        == "Analyze this log entry and identify any anomalies or patterns"
+    )
+    assert json.loads(result["input"]) == log_entry
+    assert "info-level log" in result["output"]
+    assert "database operation log" in result["output"]
+    assert "2024-01-01T12:00:00Z" in result["output"]
+
+
+def test_generate_llm_format_log_string():
+    """Test generating LLM format for string logs."""
+    log_entry = "Simple log message"
+    result = main.generate_llm_format_log(log_entry)
+    assert (
+        result["instruction"]
+        == "Analyze this log entry and identify any anomalies or patterns"
+    )
+    assert json.loads(result["input"]) == {"message": log_entry}
+
+
+def test_generate_llm_format_log_api():
+    """Test generating LLM format for API logs."""
+    log_entry = {
+        "level": "INFO",
+        "service": "api",
+        "type": "graphql",
+        "message": "Query processed",
+    }
+    result = main.generate_llm_format_log(log_entry)
+    assert "GraphQL API log" in result["output"]
+
+    log_entry["type"] = "rest"
+    result = main.generate_llm_format_log(log_entry)
+    assert "REST API log" in result["output"]
+
+
+def test_cli_llm_format(tmp_path):
+    """Test CLI with LLM format option."""
+    runner = CliRunner()
+    result = runner.invoke(
+        main.cli,
+        [
+            "--count",
+            "1",
+            "--threads",
+            "1",
+            "--output-dir",
+            str(tmp_path),
+            "--llm-format",
+        ],
+    )
+    assert result.exit_code == 0
+
+    # Check that files were created with .jsonl extension
+    files = list(tmp_path.glob("*.jsonl"))
+    assert len(files) > 0
+
+    # Verify file contents are in LLM format
+    with open(files[0], "r") as f:
+        line = f.readline()
+        entry = json.loads(line)
+        assert "instruction" in entry
+        assert "input" in entry
+        assert "output" in entry
+
+
+def test_cli_llm_format_json_output(tmp_path):
+    """Test CLI with both LLM format and JSON output."""
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--count",
+            "1",
+            "--threads",
+            "1",
+            "--output-dir",
+            str(tmp_path),
+            "--llm-format",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0
+
+    # Verify JSON output
+    output = json.loads(result.output)
+    assert output["success"] is True
+    assert output["logs_generated"] > 0
+
+    # Check that files were created with .jsonl extension
+    files = list(tmp_path.glob("*.jsonl"))
+    assert len(files) > 0
+
+    # Verify file contents are in LLM format
+    with open(files[0], "r") as f:
+        line = f.readline()
+        entry = json.loads(line)
+        assert "instruction" in entry
+        assert "input" in entry
+        assert "output" in entry
