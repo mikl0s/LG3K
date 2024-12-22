@@ -1,5 +1,5 @@
-Log Generator Modules
-==================
+Modules
+=======
 
 .. toctree::
    :maxdepth: 2
@@ -11,12 +11,7 @@ Log Generator Modules
    network
    os
    printer
+   smarthome
    web_server
 
-Main Module
-----------
-
-.. automodule:: main
-   :members:
-   :undoc-members:
-   :show-inheritance: 
+This section contains documentation for all log generation modules.
