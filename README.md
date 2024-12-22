@@ -13,6 +13,12 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/pypi/v/lg3k.svg?style=for-the-badge" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/pypi/dm/lg3k.svg?style=for-the-badge" alt="PyPI Downloads"></a>
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/pypi/pyversions/lg3k.svg?style=for-the-badge" alt="Python Versions"></a>
+</p>
+
+<p align="center">
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12-blue.svg?style=for-the-badge" alt="Python Version"></a>
   <a href="https://black.readthedocs.io/"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code Style: Black"></a>
   <a href="https://flake8.pycqa.org/"><img src="https://img.shields.io/badge/linter-flake8-blue.svg?style=for-the-badge" alt="Linter: Flake8"></a>
@@ -27,6 +33,40 @@
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/codecov/c/github/mikl0s/LG3K?style=for-the-badge" alt="Coverage"></a>
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/github/actions/workflow/status/mikl0s/LG3K/ci.yml?style=for-the-badge" alt="CI"></a>
 </p>
+
+---
+
+## **Installation**
+
+### **From PyPI (Recommended)**
+
+The easiest way to install LG3K is from PyPI:
+
+```bash
+pip install lg3k
+```
+
+This will install the latest stable version with all required dependencies.
+
+### **From Source (Development)**
+
+For the latest development version or contributing:
+
+```bash
+git clone https://github.com/mikl0s/LG3K.git
+cd LG3K
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r requirements-dev.txt
+pip install -e .
+pre-commit install
+```
+
+### **Requirements**
+
+- Python 3.12 or later
+- Dependencies are automatically installed with pip
+- Optional: `rich` package for enhanced display
 
 ---
 
