@@ -13,22 +13,16 @@
 		"python.testing.pytestArgs": [
 			"tests"
 		],
-		"python.formatting.provider": "black",
-		"python.formatting.blackArgs": [
+		"[python]": {
+			"editor.formatOnSave": true,
+			"editor.defaultFormatter": "ms-python.python",
+			"editor.rulers": [88]
+		},
+		"black-formatter.args": [
 			"--line-length",
 			"88"
 		],
-		"python.linting.enabled": true,
-		"python.linting.flake8Enabled": true,
-		"python.linting.flake8Args": [
-			"--max-line-length=88",
-			"--extend-ignore=E203"
-		],
-		"[python]": {
-			"editor.formatOnSave": true,
-			"editor.codeActionsOnSave": ["source.organizeImports"],
-			"editor.rulers": [88]
-		},
+		"isort.args": ["--profile", "black"],
 		"files.exclude": {
 			"**/__pycache__": true,
 			"**/.pytest_cache": true,
