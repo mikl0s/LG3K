@@ -10,7 +10,7 @@ setup(
     description="Log Generator 3000 - A modular log generation tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.6.5",
+    version="0.6.6",
     author="mikl0s",
     author_email="lg3k@dataloes.dk",
     url="https://github.com/mikl0s/LG3K",
