@@ -211,10 +211,12 @@ def test_log_generation():
 
 ## Performance Tips
 
-1. Use `generate_batch()` for multiple logs instead of individual calls
-2. Implement caching for frequently used log patterns
-3. Use ThreadPoolExecutor for parallel generation
-4. Consider using `ujson` for faster JSON serialization
+When integrating LG3K into your application, consider these optimization tips:
+
+1. Use `generate_batch()` for multiple logs instead of individual calls - this reduces overhead
+2. Implement caching in your application for frequently used log patterns
+3. Use ThreadPoolExecutor in your code for parallel generation when needed
+4. Consider using `ujson` in your application for faster JSON serialization of the generated logs
 
 ## Common Use Cases
 
