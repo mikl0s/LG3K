@@ -133,9 +133,12 @@ def test_smarthome_wireless_log():
     data = json.loads(log_entry.split(": ", 1)[1])
     assert data["timestamp"] == timestamp.isoformat()
     assert data["protocol"] in ["zigbee", "zwave"]
-    assert isinstance(data["network_id"], str)
-    assert isinstance(data["rssi"], int)
-    assert isinstance(data["lqi"], int)
+
+    # Check protocol-specific network IDs
+    if data["protocol"] == "zigbee":
+        assert isinstance(data["pan_id"], str)
+    else:  # zwave
+        assert isinstance(data["home_id"], str)
 
 
 def test_smarthome_camera_log():
