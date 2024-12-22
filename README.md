@@ -36,7 +36,7 @@ Welcome to **Log Generator 3000**—a fully modular log generation tool designed
 
 This project was conceptualized, developed, and published entirely on an iPad during a Saturday evening of football—and yes, the team we were rooting for won! 🎉
 
-Curious about the full story? [Read more here](./about_log_generator.md).
+Curious about the full story? [Read more here](./about_log_generator_v0.1.0.md).
 
 ---
 
@@ -113,6 +113,7 @@ lg3k/
 │   ├── os.py            # Module for OS logs
 │   ├── network.py       # Module for network logs
 │   ├── printer.py       # Module for printer logs
+│   ├── smarthome.py     # Module for smart home devices and IoT
 ├── utils/               # Folder containing utility functions
 │   ├── config.py        # Utilities for configuration handling
 │   ├── progress.py      # Utilities for progress and threading
@@ -125,10 +126,13 @@ lg3k/
 
 - **Dynamic Module Loading**: Easily add new log types by creating a module in the `modules/` folder.
 - **Scalable and Modular**: Keep your codebase clean and maintainable by separating log logic into distinct files.
-- **Rich UI**: Enjoy a beautiful, real-time progress bar for generating logs (or use `--simple` mode for minimal output).
+- **Docker-Style Progress**: Real-time progress tracking with Docker-like display for each module.
+- **Smart Home Support**: Generate logs for IoT devices, ESP32/ESP8266, Zigbee/Z-Wave, and security cameras.
+- **High Volume**: Generate up to 1,000,000 log entries per module.
+- **Rich UI**: Beautiful, real-time progress bar for generating logs (or use `--simple` mode for minimal output).
 - **Fully Configurable**: Modify the configuration file to control active services, total logs, threading, and more.
 - **Code Quality**: Enforced by Black, isort, and Flake8 through pre-commit hooks.
-- **Documentation**: Full documentation available on [ReadTheDocs](https://lg3k.readthedocs.io/).
+- **100% Test Coverage**: Comprehensive test suite ensuring reliability.
 
 ---
 
@@ -149,73 +153,56 @@ lg3k/
 
 ---
 
-### **Installation**
+### **Quick Start**
 
-1. **Clone the repository:**
+1. **Install the package:**
    ```bash
-   git clone https://github.com/mikl0s/LG3K.git
-   cd LG3K
+   pip install lg3k
    ```
 
-2. **Install dependencies:**
+2. **Generate logs:**
    ```bash
-   # For users (only rich package):
-   pip install -r requirements.txt
-
-   # For developers (includes testing, linting, and documentation tools):
-   pip install -r requirements-dev.txt
-   pip install -e .
+   lg3k --count 1000 --threads 4
    ```
 
-3. **Run the program:**
+3. **View help:**
    ```bash
-   python -m lg3k
+   lg3k --help
    ```
 
 ---
 
-## **📦 Adding New Modules**
+### **Available Modules**
 
-Adding a new log type is as simple as creating a new file in the `modules/` folder. Each module should expose a `generate_log()` function. For example:
+- **Infrastructure**
+  - `web_server` - Web server access logs
+  - `database` - Database operations
+  - `api` - API endpoint logs
+  - `firewall` - Security events
+  - `nas` - Storage operations
+  - `os` - System logs
+  - `network` - Network traffic
+  - `printer` - Print jobs
 
-**modules/custom_logs.py**
-```python
-import random
-from utils.timestamp import generate_timestamp
-
-def generate_log():
-    timestamp = generate_timestamp()
-    level = random.choice(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"])
-    return {
-        "timestamp": timestamp,
-        "level": level,
-        "component": "CustomLogs",
-        "message": "Custom log entry generated.",
-    }
-```
-
-The main program will automatically detect and use this new module.
-
----
-
-## **🔧 Configuration**
-
-The configuration file (`config.json`) controls the active services, total logs, split size, and threading. If the file does not exist, it will be created with default values:
-
-```json
-{
-    "services": ["web_server"],
-    "total_logs": 1000,
-    "split_size": 100,
-    "max_threads": 4
-}
-```
-
-Modify the `services` list to include the desired modules (e.g., `["web_server", "custom_logs"]`).
+- **Smart Home & IoT**
+  - Smart home devices (thermostats, lights, sensors)
+  - ESP32/ESP8266 microcontrollers
+  - Zigbee/Z-Wave devices
+  - Security cameras and doorbells
 
 ---
 
 ## **📊 Sample Output**
+
+### **Docker-Style Progress Display**
+
+```text
+1ff5d2e3: web_server   [=========>  ] 50.0%
+5520ebfb: database     [==========] Complete
+e9c8c5d6: api         [>         ] Waiting
+7a1b3c4d: smarthome   [=======>   ] 35.0%
+...
+```
 
 ### **Rich UI (Default Mode)**
 
@@ -243,7 +230,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## **💬 Questions?**
 
-Feel free to open an issue or contact us at `support@loggenerator3000.com`.
+Feel free to open an issue or contact us at `lg3k@dataloes.dk`.
 
 ---
 
