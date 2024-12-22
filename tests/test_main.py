@@ -267,7 +267,7 @@ def test_cli_json_output(tmp_path):
                 "1",
                 "--output-dir",
                 str(output_dir),
-                "--json",
+                "--json-output",
             ],
         )
 
@@ -284,7 +284,7 @@ def test_cli_json_output_error():
     """Test JSON output mode with error."""
     with patch("lg3k.main.load_config") as mock_config:
         mock_config.side_effect = Exception("Test error")
-        result = CliRunner().invoke(cli, ["--count", "5", "--json"])
+        result = CliRunner().invoke(cli, ["--count", "5", "--json-output"])
 
     assert result.exit_code == 1
     output = json.loads(result.output)
@@ -316,7 +316,7 @@ def test_cli_json_output_keyboard_interrupt(tmp_path):
                 "1",
                 "--output-dir",
                 str(output_dir),
-                "--json",
+                "--json-output",
             ],
         )
 

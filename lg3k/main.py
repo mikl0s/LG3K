@@ -6,6 +6,7 @@ It handles dynamic module loading, configuration management, and the main execut
 
 import concurrent.futures
 import importlib
+import json
 import multiprocessing
 import os
 import shutil
@@ -174,7 +175,11 @@ def cleanup_files(keep_files: bool = False):
 
 
 def generate_module_logs(
-    module_name: str, generator_func: callable, count: int, output_dir: Path
+    module_name: str,
+    generator_func: callable,
+    count: int,
+    output_dir: Path,
+    json_output: bool = False,
 ) -> None:
     """Generate logs for a specific module and write them to a file.
 
@@ -183,6 +188,7 @@ def generate_module_logs(
         generator_func: Function that generates individual log entries
         count: Number of log entries to generate
         output_dir: Directory to write log files to
+        json_output: Whether to suppress progress output for JSON mode
     """
     output_file = (
         output_dir / f"{module_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
@@ -192,7 +198,8 @@ def generate_module_logs(
     with progress_lock:
         module_status[module_name] = "Running"
         module_progress[module_name] = "0.0%"
-        update_progress_display()
+        if not json_output:
+            update_progress_display()
 
     try:
         with open(output_file, "w") as f:
@@ -200,7 +207,8 @@ def generate_module_logs(
                 if exit_event.is_set():
                     with progress_lock:
                         module_status[module_name] = "Cancelled"
-                        update_progress_display()
+                        if not json_output:
+                            update_progress_display()
                     return
 
                 log_entry = generator_func()
@@ -209,18 +217,48 @@ def generate_module_logs(
                     progress = update_progress(i + 1, count)
                     with progress_lock:
                         module_progress[module_name] = progress
-                        update_progress_display()
+                        if not json_output:
+                            update_progress_display()
 
             # Update final progress
             with progress_lock:
                 module_progress[module_name] = "100.0%"
                 module_status[module_name] = "Complete"
-                update_progress_display()
+                if not json_output:
+                    update_progress_display()
     except Exception as e:
         with progress_lock:
             module_status[module_name] = f"Error: {str(e)}"
-            update_progress_display()
+            if not json_output:
+                update_progress_display()
         raise
+
+
+def output_json(
+    success: bool,
+    logs_generated: int,
+    time_taken: float,
+    files: list,
+    error: Optional[str] = None,
+) -> None:
+    """Output results in JSON format.
+
+    Args:
+        success: Whether the operation was successful
+        logs_generated: Number of logs generated
+        time_taken: Time taken in seconds
+        files: List of generated file paths
+        error: Optional error message
+    """
+    result = {
+        "success": success,
+        "logs_generated": logs_generated,
+        "time_taken": round(time_taken, 2),
+        "files": files,
+    }
+    if error:
+        result["error"] = error
+    print(json.dumps(result, indent=2))
 
 
 @click.command()
@@ -259,7 +297,7 @@ def generate_module_logs(
     help="Output directory for log files (default: logs/)",
 )
 @click.option(
-    "--json",
+    "--json-output",
     is_flag=True,
     help="Output a single line of JSON with generation results",
 )
@@ -271,14 +309,16 @@ def cli(
     threads: Optional[int],
     config: Optional[str],
     output_dir: str,
-    json: bool,
+    json_output: bool,
 ):
     """Multi-threaded log generator for testing and development.
 
     Start with: lg3k --generate-config config.json
     Press Ctrl+C to exit gracefully.
     """
-    if not any([generate_config, count, threads, config, output_dir != "logs", json]):
+    if not any(
+        [generate_config, count, threads, config, output_dir != "logs", json_output]
+    ):
         show_rich_help(ctx)
         return
 
@@ -289,12 +329,15 @@ def cli(
         total_logs = 0
         error_message = None
 
+        # Clear any previous run files
+        current_run_files.clear()
+
         try:
             # Handle config generation if requested
             if generate_config:
                 config_path = Path(generate_config)
                 if config_path.exists():
-                    if RICH_AVAILABLE:
+                    if RICH_AVAILABLE and not json_output:
                         console.print(
                             f"[yellow]Warning: {generate_config} already exists. Skipping.[/yellow]"
                         )
@@ -304,6 +347,10 @@ def cli(
 
                 with open(config_path, "w") as f:
                     json.dump(get_default_config(), f, indent=4)
+
+                if json_output:
+                    output_json(True, 0, 0, [str(config_path)])
+                    return
 
                 if RICH_AVAILABLE:
                     console.print(
@@ -328,6 +375,9 @@ def cli(
             modules = load_modules()
             if not modules:
                 msg = "Error: No modules found. Please check your installation."
+                if json_output:
+                    output_json(False, 0, 0, [], msg)
+                    sys.exit(1)
                 if RICH_AVAILABLE:
                     console.print(f"[red]{msg}[/red]")
                 else:
@@ -339,46 +389,50 @@ def cli(
             active_modules = {k: v for k, v in modules.items() if k in active_services}
 
             if not active_modules:
+                msg = "No active modules found. Check your configuration."
+                if json_output:
+                    output_json(False, 0, 0, [], msg)
+                    sys.exit(1)
                 if RICH_AVAILABLE:
-                    console.print(
-                        "[yellow]No active modules found. Check your configuration.[/yellow]"
-                    )
+                    console.print(f"[yellow]{msg}[/yellow]")
                     console.print(f"Available modules: {', '.join(modules.keys())}")
                     console.print(
                         f"Active services in config: {', '.join(active_services)}"
                     )
                 else:
-                    print("No active modules found. Check your configuration.")
+                    print(msg)
                     print(f"Available modules: {', '.join(modules.keys())}")
                     print(f"Active services in config: {', '.join(active_services)}")
                 sys.exit(1)
 
             # Show configuration summary
-            if RICH_AVAILABLE:
-                console.print(
-                    Panel.fit(
-                        f"[bold]Configuration[/bold]\n"
-                        f"Logs per module: {log_count}\n"
-                        f"Active modules: {len(active_modules)}\n"
-                        f"Threads: {thread_count}\n"
-                        f"Output directory: {output_path}",
-                        title="[bold blue]Log Generator 3000[/bold blue]",
-                        border_style="blue",
+            if not json_output:
+                if RICH_AVAILABLE:
+                    console.print(
+                        Panel.fit(
+                            f"[bold]Configuration[/bold]\n"
+                            f"Logs per module: {log_count}\n"
+                            f"Active modules: {len(active_modules)}\n"
+                            f"Threads: {thread_count}\n"
+                            f"Output directory: {output_path}",
+                            title="[bold blue]Log Generator 3000[/bold blue]",
+                            border_style="blue",
+                        )
                     )
-                )
-            else:
-                print("\nConfiguration:")
-                print(f"Logs per module: {log_count}")
-                print(f"Active modules: {len(active_modules)}")
-                print(f"Threads: {thread_count}")
-                print(f"Output directory: {output_path}\n")
+                else:
+                    print("\nConfiguration:")
+                    print(f"Logs per module: {log_count}")
+                    print(f"Active modules: {len(active_modules)}")
+                    print(f"Threads: {thread_count}")
+                    print(f"Output directory: {output_path}\n")
 
             # Generate logs using thread pool
-            msg = f"Generating logs using {thread_count} threads..."
-            if RICH_AVAILABLE:
-                console.print(f"[blue]{msg}[/blue]")
-            else:
-                print(msg)
+            if not json_output:
+                msg = f"Generating logs using {thread_count} threads..."
+                if RICH_AVAILABLE:
+                    console.print(f"[blue]{msg}[/blue]")
+                else:
+                    print(msg)
 
             # Initialize progress display
             module_order.clear()  # Clear any previous order
@@ -386,7 +440,8 @@ def cli(
                 module_order.append(name)
                 module_status[name] = "Waiting"
                 module_progress[name] = "0.0%"
-            print(format_progress_display())
+            if not json_output:
+                print(format_progress_display())
 
             try:
                 # Process modules sequentially if thread_count is 1
@@ -394,7 +449,9 @@ def cli(
                     for name, func in active_modules.items():
                         if exit_event.is_set():
                             break
-                        generate_module_logs(name, func, log_count, output_path)
+                        generate_module_logs(
+                            name, func, log_count, output_path, json_output
+                        )
                 else:
                     # Use thread pool for parallel processing
                     with concurrent.futures.ThreadPoolExecutor(
@@ -402,7 +459,12 @@ def cli(
                     ) as executor:
                         futures = [
                             executor.submit(
-                                generate_module_logs, name, func, log_count, output_path
+                                generate_module_logs,
+                                name,
+                                func,
+                                log_count,
+                                output_path,
+                                json_output,
                             )
                             for name, func in active_modules.items()
                         ]
@@ -416,17 +478,17 @@ def cli(
                 if exit_event.is_set():
                     error_message = "Generation cancelled"
                     if (
-                        sys.stdin.isatty() and not json
+                        sys.stdin.isatty() and not json_output
                     ):  # Only ask if running in a terminal and not in JSON mode
                         keep = click.confirm(
                             "\nKeep partially generated files?", default=False
                         )
                         cleanup_files(keep)
-                    if not json:
+                    if not json_output:
                         print("\nExiting...")
                 else:
                     # Add final newline if not in JSON mode
-                    if not json:
+                    if not json_output:
                         print()
                         msg = "Log generation complete!"
                         if RICH_AVAILABLE:
@@ -444,51 +506,42 @@ def cli(
                 exit_event.set()
                 error_message = "Generation cancelled"
                 if (
-                    sys.stdin.isatty() and not json
+                    sys.stdin.isatty() and not json_output
                 ):  # Only ask if running in a terminal and not in JSON mode
                     keep = click.confirm(
                         "\nKeep partially generated files?", default=False
                     )
                     cleanup_files(keep)
-                if not json:
+                if not json_output:
                     print("\nExiting...")
 
             # Output JSON if requested
-            if json:
+            if json_output:
                 time_taken = (datetime.now() - start_time).total_seconds()
-                result = {
-                    "success": error_message is None,
-                    "logs_generated": total_logs,
-                    "time_taken": round(time_taken, 2),
-                    "files": generated_files,
-                }
-                if error_message:
-                    result["error"] = error_message
-                print(json.dumps(result))
+                output_json(
+                    error_message is None,
+                    0 if error_message else log_count,  # Set to 0 for errors
+                    time_taken,
+                    generated_files,
+                    error_message,
+                )
                 sys.exit(1 if error_message else 0)
 
         except KeyboardInterrupt:
             exit_event.set()
             error_message = "Generation cancelled"
             if (
-                sys.stdin.isatty() and not json
+                sys.stdin.isatty() and not json_output
             ):  # Only ask if running in a terminal and not in JSON mode
                 keep = click.confirm("\nKeep partially generated files?", default=False)
                 cleanup_files(keep)
-            if not json:
+            if not json_output:
                 print("\nExiting...")
 
     except Exception as e:
         error_message = str(e)
-        if json:
-            result = {
-                "success": False,
-                "error": error_message,
-                "logs_generated": 0,
-                "time_taken": 0,
-                "files": [],
-            }
-            print(json.dumps(result))
+        if json_output:
+            output_json(False, 0, 0, [], error_message)
             sys.exit(1)
         else:
             msg = f"Error: {error_message}"
