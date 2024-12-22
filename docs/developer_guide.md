@@ -28,6 +28,28 @@ log_entry = api.generate_log()
 print(log_entry)
 ```
 
+### Programmatic Output Mode
+
+When using LG3K in scripts or automated workflows, you can use the `--json` flag to get a single-line JSON output that's easy to parse:
+
+```bash
+lg3k --count 1000 --threads 4 --json
+```
+
+This will output a single line with a JSON object containing:
+```json
+{
+    "success": true,
+    "logs_generated": 1000,
+    "time_taken": 1.23,
+    "files": ["logs/part1.json", "logs/part2.json"]
+}
+```
+
+The process will exit with:
+- Code 0: Success
+- Code 1: Error (with error details in the JSON output)
+
 ### Batch Generation
 
 ```python
@@ -217,6 +239,8 @@ When integrating LG3K into your application, consider these optimization tips:
 2. Implement caching in your application for frequently used log patterns
 3. Use ThreadPoolExecutor in your code for parallel generation when needed
 4. Consider using `ujson` in your application for faster JSON serialization of the generated logs
+
+> 💡 **Contributing to LG3K**: We welcome contributions that improve LG3K's performance! If you have ideas for optimizations or have identified bottlenecks, please feel free to open an issue or submit a pull request.
 
 ## Common Use Cases
 
