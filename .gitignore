@@ -62,3 +62,7 @@ _templates/
 *.spec
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Generated logs
+logs/
+*.log
