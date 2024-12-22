@@ -7,13 +7,13 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Project information
 project = "Log Generator 3000"
-copyright = "2024, Mikkel Munch Mortensen"
-author = "Mikkel Munch Mortensen"
+copyright = "2024, mikl0s"
+author = "mikl0s"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.2"
+release = "0.6.3"
 # The short X.Y version
-version = "0.6.2"
+version = "0.6.3"
 
 # General configuration
 extensions = [

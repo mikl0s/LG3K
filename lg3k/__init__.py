@@ -2,6 +2,6 @@
 
 from .main import load_modules
 
-__version__ = "0.6.2"
-__author__ = "Mikkel Munch Mortensen"
+__version__ = "0.6.3"
+__author__ = "mikl0s"
 __all__ = ["load_modules"]
