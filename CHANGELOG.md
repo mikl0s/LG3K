@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2024-03-22
+
+### Added
+- PyPI package distribution
+  - Published to PyPI (`pip install lg3k`)
+  - Added PyPI badges
+  - Added download statistics
+
+### Changed
+- Improved installation documentation
+- Updated GitHub Actions for PyPI publishing
+
 ## [0.6.3] - 2024-03-22
 
 ### Added

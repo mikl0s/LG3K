@@ -225,7 +225,7 @@ def generate_module_logs(
 
 
 @click.command()
-@click.version_option(version="0.6.3", prog_name="Log Generator 3000")
+@click.version_option(version="0.6.4", prog_name="Log Generator 3000")
 @click.option(
     "--generate-config",
     type=click.Path(),

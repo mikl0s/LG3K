@@ -11,9 +11,9 @@ copyright = "2024, mikl0s"
 author = "mikl0s"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.3"
+release = "0.6.4"
 # The short X.Y version
-version = "0.6.3"
+version = "0.6.4"
 
 # General configuration
 extensions = [

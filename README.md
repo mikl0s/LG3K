@@ -13,13 +13,12 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.3-blue?style=for-the-badge" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.4-blue?style=for-the-badge" alt="PyPI Version"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/downloads-0-blue?style=for-the-badge" alt="PyPI Downloads"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/python-3.12-blue?style=for-the-badge" alt="Python Versions"></a>
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12-blue.svg?style=for-the-badge" alt="Python Version"></a>
   <a href="https://black.readthedocs.io/"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code Style: Black"></a>
   <a href="https://flake8.pycqa.org/"><img src="https://img.shields.io/badge/linter-flake8-blue.svg?style=for-the-badge" alt="Linter: Flake8"></a>
   <a href="https://pycqa.github.io/isort/"><img src="https://img.shields.io/badge/imports-isort-white.svg?style=for-the-badge" alt="Imports: isort"></a>
@@ -176,7 +175,7 @@ lg3k/
 
 ---
 
-## **🚀 Getting Started**
+## **�� Getting Started**
 
 ### **Prerequisites**
 - Python 3.12 or later
