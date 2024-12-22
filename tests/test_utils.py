@@ -56,3 +56,39 @@ def test_get_timestamp_error():
         mock_dt.now.side_effect = ValueError("Test error")
         with pytest.raises(ValueError):
             get_timestamp()
+
+
+def test_create_progress_bar_full():
+    """Test progress bar creation at 100%."""
+    from lg3k.utils.progress import create_progress_bar
+
+    bar = create_progress_bar(100.0)
+    assert bar == "[====================]"
+
+
+def test_create_progress_bar_custom_width():
+    """Test progress bar creation with custom width."""
+    from lg3k.utils.progress import create_progress_bar
+
+    bar = create_progress_bar(50.0, width=10)
+    assert bar == "[=====>    ]"
+
+
+def test_create_progress_bar_zero():
+    """Test progress bar creation at 0%."""
+    from lg3k.utils.progress import create_progress_bar
+
+    bar = create_progress_bar(0.0)
+    assert bar == "[>                   ]"
+
+
+def test_update_progress_edge_cases():
+    """Test update_progress with edge cases."""
+    from lg3k.utils.progress import update_progress
+
+    # Test 0%
+    assert "0.0%" in update_progress(0, 100)
+    # Test 100%
+    assert "100.0%" in update_progress(100, 100)
+    # Test intermediate value
+    assert "50.0%" in update_progress(50, 100)
