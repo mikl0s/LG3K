@@ -1,0 +1,18 @@
+include LICENSE
+include README.md
+include requirements.txt
+
+recursive-include lg3k *.py
+recursive-include lg3k/modules *.py
+
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude pytest.ini
+exclude requirements-dev.txt
+exclude tox.ini
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
+recursive-exclude tests *
+recursive-exclude docs *
+recursive-exclude .github *

@@ -19,50 +19,28 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # Virtual Environment
 venv/
-ENV/
 env/
+ENV/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.history/
-
-# Misc
-.DS_Store
-.env
-.coverage
-htmlcov/
-.cache/
 
 # Testing
-.pytest_cache/
+.coverage
 coverage.xml
-.coverage.*
-.hypothesis/
+htmlcov/
+.pytest_cache/
 .tox/
-nosetests.xml
-coverage/
 
 # Documentation
 docs/_build/
-docs/_static/
-docs/_templates/
-_build/
-_static/
-_templates/
 
-# Distribution / packaging
-*.manifest
-*.spec
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Generated logs
+# Log files
 logs/
 *.log
