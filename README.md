@@ -175,7 +175,7 @@ lg3k/
 
 ---
 
-## **�� Getting Started**
+## **Getting Started**
 
 ### **Prerequisites**
 - Python 3.12 or later
@@ -208,6 +208,18 @@ lg3k/
    ```bash
    lg3k --help
    ```
+
+---
+
+### **Developer Guide**
+
+Looking to integrate LG3K into your application or AI model? Check out our [Developer Guide](docs/developer_guide.md) for:
+
+- 🔧 Programmatic usage examples
+- 🤖 AI integration patterns
+- 📊 Log format specifications
+- ⚡ Performance optimization tips
+- 🧪 Integration testing strategies
 
 ---
 
