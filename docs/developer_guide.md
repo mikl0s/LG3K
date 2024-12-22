@@ -6,6 +6,83 @@
 pip install lg3k
 ```
 
+## Configuration File
+
+### Overview
+LG3K uses a JSON configuration file to control its behavior. The configuration file specifies which log generators to use, how many logs to generate, and how many threads to use for parallel generation.
+
+### Generating a Configuration File
+You can generate a default configuration file using the `--generate-config` option:
+
+```bash
+lg3k --generate-config config.json
+```
+
+This will create a configuration file with default settings. The generated file will include:
+- A list of all available log generators
+- Default log count settings
+- Default thread count settings
+
+### Configuration File Structure
+```json
+{
+    "services": [
+        "api",
+        "database",
+        "firewall",
+        "nas",
+        "network",
+        "os",
+        "printer",
+        "web_server",
+        "smarthome"
+    ],
+    "count": 100,
+    "threads": 4
+}
+```
+
+### Configuration Options
+
+#### services
+- Type: Array of strings
+- Description: List of log generators to use
+- Available options:
+  - `api`: API endpoint logs
+  - `database`: Database operation logs
+  - `firewall`: Security logs
+  - `nas`: Network storage logs
+  - `network`: Network traffic logs
+  - `os`: Operating system logs
+  - `printer`: Print job logs
+  - `web_server`: Web server access logs
+  - `smarthome`: Smart home device logs
+
+#### count
+- Type: Integer
+- Description: Number of log entries to generate per service
+- Default: 100
+- Maximum: 1,000,000
+
+#### threads
+- Type: Integer
+- Description: Number of threads to use for parallel log generation
+- Default: System CPU count
+- Minimum: 1
+
+### Using the Configuration File
+Once you have a configuration file, you can use it with LG3K:
+
+```bash
+lg3k --config config.json
+```
+
+You can override configuration file settings using command-line options:
+
+```bash
+lg3k --config config.json --count 1000 --threads 2
+```
+
 ## Programmatic Usage
 
 ### Basic Import and Setup
