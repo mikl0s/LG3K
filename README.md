@@ -1,7 +1,7 @@
 # **🌟 Log Generator 3000 (LG3K)**
 
 <p align="center">
-  <img src="logo.png" alt="LG3K Logo - AI generated and AI background removal to make it transparent" width="700">
+  <img src="https://raw.githubusercontent.com/mikl0s/LG3K/main/logo.png" alt="LG3K Logo - AI generated and AI background removal to make it transparent" width="700">
 </p>
 
 <h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.5-blue?style=for-the-badge" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/pypi-v0.6.6-blue?style=for-the-badge" alt="PyPI Version"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/downloads-0-blue?style=for-the-badge" alt="PyPI Downloads"></a>
   <a href="https://pypi.org/project/lg3k/"><img src="https://img.shields.io/badge/python-3.12-blue?style=for-the-badge" alt="Python Versions"></a>
 </p>
@@ -32,6 +32,39 @@
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/codecov/c/github/mikl0s/LG3K?style=for-the-badge" alt="Coverage"></a>
   <a href="https://github.com/mikl0s/LG3K/actions"><img src="https://img.shields.io/github/actions/workflow/status/mikl0s/LG3K/ci.yml?style=for-the-badge" alt="CI"></a>
 </p>
+
+---
+
+## **Documentation Guides**
+
+### **[Log Generation Guide](docs/log_generation_guide.md)**
+Comprehensive guide for generating logs with LG3K:
+- Log format specifications
+- Module-specific examples
+- Error handling patterns
+- Progress tracking
+- Best practices for log generation
+
+### **[Llama Training How-To](docs/llama_training_howto.md)**
+Step-by-step guide for training `llama3.2:3b-instruct-fp16` with LG3K logs:
+- Hardware and software requirements
+- Environment setup for Windows, macOS, and Ubuntu
+- Training data generation
+- Model configuration
+- Training script implementation
+- Monitoring and troubleshooting
+- Memory optimization for 8-12GB VRAM GPUs
+
+### **[Developer Guide](docs/developer_guide.md)**
+Detailed guide for developers integrating LG3K:
+- Configuration file management
+- Programmatic usage examples
+- Error handling strategies
+- Progress tracking implementation
+- File cleanup patterns
+- Module-specific integrations
+- JSON output handling
+- LLM format generation
 
 ---
 
@@ -63,19 +96,20 @@ pre-commit install
 
 ### **Requirements**
 
-- Python 3.12 or later
+- Python (latest stable version)
 - Dependencies are automatically installed with pip
 - Optional: `rich` package for enhanced display
+- Optional: `torch` and `psutil` for GPU-optimized LLM training
 
 ---
 
 ## **About**
 
-Welcome to **Log Generator 3000**—a fully modular log generation tool designed to simplify testing and monitoring across diverse systems. It supports web servers, APIs, databases, firewalls, and more.
+Welcome to **Log Generator 3000**—a fully modular log generation tool designed to simplify testing and monitoring across diverse systems. It supports web servers, APIs, databases, firewalls, and more, with special support for LLM training data generation.
 
 This project was conceptualized, developed, and published entirely on an iPad during a Saturday evening of football—and yes, the team we were rooting for won! 🎉
 
-Curious about the full story? [Read more here](./about_log_generator_v0.1.0.md).
+Curious about the full story? [Read more here](about_log_generator_v0.1.0.md).
 
 ---
 
@@ -168,19 +202,25 @@ lg3k/
 - **Docker-Style Progress**: Real-time progress tracking with Docker-like display for each module.
 - **Smart Home Support**: Generate logs for IoT devices, ESP32/ESP8266, Zigbee/Z-Wave, and security cameras.
 - **High Volume**: Generate up to 1,000,000 log entries per module.
-- **Rich UI**: Beautiful, real-time progress bar for generating logs (or use `--simple` mode for minimal output).
+- **Rich UI**: Beautiful, real-time progress bar for generating logs (with fallback to simple mode).
 - **Fully Configurable**: Modify the configuration file to control active services, total logs, threading, and more.
 - **JSON Output Mode**: Get structured output in JSON format for easy parsing and automation.
 - **Configuration Generation**: Generate default configuration files with `--generate-config`.
 - **Code Quality**: Enforced by Black, isort, and Flake8 through pre-commit hooks.
 - **100% Test Coverage**: Comprehensive test suite ensuring reliability.
+- **LLM Training Format**: Generate logs in a format optimized for training Large Language Models.
+- **Rich-Free Operation**: Can run without the `rich` package installed using `--simple` or `--llm` options.
+- **Graceful Error Handling**: Comprehensive error handling with informative messages.
+- **Progress Status**: Real-time status updates for each module (Running, Complete, Error, Cancelled).
+- **File Cleanup**: Automatic cleanup of generated files with keep-files option.
+- **Module Analysis**: Built-in log analysis capabilities for each module type.
 
 ---
 
 ## **Getting Started**
 
 ### **Prerequisites**
-- Python 3.12 or later
+- Python (latest stable version)
 - For users:
   ```bash
   pip install -r requirements.txt
@@ -206,10 +246,39 @@ lg3k/
    lg3k --count 1000 --threads 4
    ```
 
-3. **View help:**
+3. **Generate logs without rich UI:**
+   ```bash
+   lg3k --count 1000 --threads 4 --simple
+   ```
+
+4. **Generate logs in LLM format:**
+   ```bash
+   lg3k --count 1000 --threads 4 --llm-format
+   ```
+
+5. **View help:**
    ```bash
    lg3k --help
    ```
+
+---
+
+### **Generating Logs for LLM Training**
+
+To generate logs in a format suitable for training Large Language Models:
+
+```bash
+lg3k --llm-format
+```
+
+This will:
+- Generate logs in instruction-tuning format
+- Include detailed analysis for each log entry
+- Structure data for easy model training
+- Support both string and JSON log formats
+- Handle errors gracefully with informative messages
+
+For more details, see the [Llama Training How-To](docs/llama_training_howto.md).
 
 ---
 
@@ -224,6 +293,9 @@ Looking to integrate LG3K into your application or AI model? Check out our [Deve
 - 🧪 Integration testing strategies
 - 🛠️ Configuration file generation
 - 📋 JSON output mode usage
+- 🎯 Error handling best practices
+- 📈 Progress tracking implementation
+- 🧹 File cleanup strategies
 
 ---
 
@@ -263,7 +335,7 @@ e9c8c5d6: api         [>         ] Waiting
 
 ```text
 [Thread 1] ██████▉ 90% (90/100 logs)
-[Thread 2] ███████▌ 100% (100/100 logs) Completed: logs_part2.json
+[Thread 2] █████████▌ 100% (100/100 logs) Completed: logs_part2.json
 ...
 ```
 

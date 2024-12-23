@@ -1,8 +1,4 @@
-"""Main module for log generation.
-
-This module provides the core functionality for loading and executing log generation modules.
-It handles dynamic module loading, configuration management, and the main execution flow.
-"""
+"""Main module for LG3K - Log Generator 3000."""
 
 import concurrent.futures
 import importlib
@@ -11,25 +7,28 @@ import os
 import shutil
 import sys
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from types import SimpleNamespace
+from typing import Callable, Dict, Optional, Union
 
 import click
+from click.exceptions import Exit
 
 # Try to import Rich, but don't fail if it's not available
 try:
     from rich.console import Console
+    from rich.progress import Progress, SpinnerColumn, TextColumn
     from rich.table import Table
 
-    RICH_AVAILABLE = True
-    console = Console()
+    HAS_RICH = True
 except ImportError:
-    RICH_AVAILABLE = False
-    console = None
-    print("Rich library not available. Install 'rich' package for enhanced output.")
+    HAS_RICH = False
 
 from .utils.config import get_default_config, load_config
+
+__version__ = "0.1.0"
 
 # Global lock for progress updates
 progress_lock = threading.Lock()
@@ -41,70 +40,68 @@ module_status = {}
 module_order = []
 # Global state for exit handling
 exit_event = threading.Event()
-current_run_files = []
+current_run_files = set()
 
 
 def get_terminal_width() -> int:
     """Get the terminal width, defaulting to 80 if not available."""
     try:
         return shutil.get_terminal_size().columns
-    except (AttributeError, ValueError):
+    except (AttributeError, OSError):
         return 80
 
 
-def show_rich_help(ctx):
-    """Display help using Rich formatting."""
-    if not RICH_AVAILABLE:
-        print("Rich library not available. Install 'rich' package for enhanced output.")
-        click.echo(ctx.get_help())
-        return
+def show_rich_help(ctx: click.Context) -> None:
+    """Show help message with Rich formatting.
 
-    if console is None:
-        print("Rich library not available. Install 'rich' package for enhanced output.")
-        click.echo(ctx.get_help())
-        return
-
-    console.print("\nLog Generator 3000\n")
-
-    # Quick start examples
-    console.print("Quick Start:")
-    console.print("  lg3k --generate-config config.json  # Create config")
-    console.print("  lg3k                                # Generate logs")
-    console.print("  lg3k -c 1000 -t 4                   # Custom generation\n")
-
-    # Show modules in columns
-    console.print("Modules:")
-    console.print("  api      - API endpoints    network - Traffic logs")
-    console.print("  database - DB operations    os      - System logs")
-    console.print("  firewall - Security logs    printer - Print jobs")
-    console.print("  nas      - Storage logs     web     - HTTP access\n")
-
-    # Show command table
-    if Table is not None:
-        table = Table(
-            show_header=True,
-            header_style="bold white",
-            border_style="dim",
-            padding=(0, 1),
+    Args:
+        ctx: Click context object
+    """
+    if not HAS_RICH:
+        click.echo(
+            "Rich library not available. Install 'rich' package for enhanced output."
         )
-        table.add_column("Option", style="yellow", no_wrap=True)
-        table.add_column("Description", style="bright_blue")
+        click.echo(ctx.get_help())
+        return
 
-        table.add_row("--generate-config PATH", "Create config file")
-        table.add_row("-c, --count N", "Logs per module (max: 1,000,000)")
-        table.add_row("-t, --threads N", "Thread count (default: CPU count)")
-        table.add_row("-f, --config PATH", "Config file path")
-        table.add_row("-o, --output-dir PATH", "Output directory")
+    try:
+        # Create table for options
+        table = Table(
+            title="Command Line Options", show_header=True, header_style="bold magenta"
+        )
+        table.add_column("Option", style="cyan", no_wrap=True)
+        table.add_column("Description", style="green")
+        table.add_column("Default", style="yellow")
 
+        # Add options to table
+        for param in ctx.command.params:
+            default = param.default if param.default != param.required else ""
+            if isinstance(default, bool):
+                default = str(default).lower()
+            elif default is None:
+                default = ""
+            table.add_row(
+                f"--{param.name}",
+                param.help or "",
+                str(default),
+            )
+
+        # Create panel for description
+        description = Panel(
+            "Multi-threaded log generator for testing and development.\n\n"
+            "Start with: lg3k --generate-config config.json\n"
+            "Press Ctrl+C to exit gracefully.",
+            title="Description",
+            border_style="blue",
+        )
+
+        # Print help message
+        console.print(description)
         console.print(table)
-    else:
-        # Fallback to plain text table
-        console.print("\nOptions:")
-        console.print("  --generate-config PATH  Create config file")
-        console.print("  -c, --count N          Logs per module (max: 1,000,000)")
-        console.print("  -t, --threads N        Thread count (default: CPU count)")
-        console.print("  -f, --config PATH      Config file path")
-        console.print("  -o, --output-dir PATH  Output directory")
+
+    except Exception as e:
+        click.echo(f"Error displaying Rich help: {str(e)}")
+        click.echo(ctx.get_help())
 
 
 def load_modules() -> Dict[str, callable]:
@@ -122,7 +119,7 @@ def load_modules() -> Dict[str, callable]:
                 if hasattr(module, "generate_log"):
                     modules[module_name] = module.generate_log
             except ImportError as e:
-                if RICH_AVAILABLE:
+                if HAS_RICH:
                     console.print(
                         f"[yellow]Warning: Failed to load module {module_name}: {e}[/yellow]"
                     )
@@ -141,24 +138,59 @@ def format_progress_display() -> str:
         # Add hash to module name for Docker-like display
         module_id = f"{hash(name) & 0xFFFFFFFF:08x}"
         if status == "Running":
-            progress = module_progress[name]
-            lines.append(f"{module_id}: {name:<12} {progress}")
+            progress = module_progress.get(name, "0%")
+            if HAS_RICH and console is not None:
+                lines.append(
+                    f"[cyan]{module_id}[/cyan]: [green]{name:<12}[/green] {progress}"
+                )
+            else:
+                lines.append(f"{module_id}: {name:<12} {progress}")
         elif status == "Complete":
-            lines.append(f"{module_id}: {name:<12} Complete")
+            if HAS_RICH and console is not None:
+                lines.append(
+                    f"[cyan]{module_id}[/cyan]: [green]{name:<12} Complete[/green]"
+                )
+            else:
+                lines.append(f"{module_id}: {name:<12} Complete")
+        elif status.startswith("Error:"):
+            if HAS_RICH and console is not None:
+                lines.append(
+                    f"[cyan]{module_id}[/cyan]: [red]{name:<12} {status}[/red]"
+                )
+            else:
+                lines.append(f"{module_id}: {name:<12} {status}")
         else:
-            lines.append(f"{module_id}: {name:<12} {status}")
+            if HAS_RICH and console is not None:
+                lines.append(
+                    f"[cyan]{module_id}[/cyan]: [yellow]{name:<12} {status}[/yellow]"
+                )
+            else:
+                lines.append(f"{module_id}: {name:<12} {status}")
     return "\n".join(lines)
 
 
 def update_progress_display():
     """Update the progress display."""
+    if not module_progress:
+        return
+
     # Move cursor up by number of modules
     module_count = len(module_progress)
     if module_count > 0:
-        # Clear previous display
-        print(f"\033[{module_count}A\033[J", end="", flush=True)
-        # Print new display
-        print(format_progress_display(), flush=True)
+        try:
+            # Clear previous display
+            print(f"\033[{module_count}A\033[J", end="", flush=True)
+            # Print new display
+            if HAS_RICH and console is not None:
+                try:
+                    console.print(format_progress_display())
+                except Exception:
+                    print(format_progress_display(), flush=True)
+            else:
+                print(format_progress_display(), flush=True)
+        except Exception:
+            # If terminal control fails, just print the current status
+            print(format_progress_display(), flush=True)
 
 
 def cleanup_files(keep_files: bool = False):
@@ -168,9 +200,12 @@ def cleanup_files(keep_files: bool = False):
         keep_files: If True, keep the partially generated files
     """
     if not keep_files:
-        for file_path in current_run_files:
+        # Convert to list to avoid modifying set during iteration
+        files_to_remove = list(current_run_files)
+        for file_path in files_to_remove:
             try:
                 Path(file_path).unlink()
+                current_run_files.remove(file_path)
             except OSError:
                 pass  # Ignore errors during cleanup
 
@@ -240,76 +275,167 @@ def generate_analysis(name: str, log_entry: Dict) -> str:
     return " ".join(analysis)
 
 
-def generate_module_logs(
-    name: str,
-    func: Callable,
-    count: int,
-    output_path: Path,
-    json_output: bool = False,
-    llm_format: bool = False,
-) -> None:
-    """Generate logs for a specific module.
+def update_progress(name: str, progress: str) -> None:
+    """Update progress for a module.
 
     Args:
         name: Module name
-        func: Module function to generate logs
-        count: Number of logs to generate
-        output_path: Output directory path
-        json_output: Whether to output JSON
-        llm_format: Whether to format logs for LLM training
+        progress: Progress string to display
+    """
+    with progress_lock:
+        if name not in module_order:
+            module_order.append(name)
+        module_progress[name] = progress
+        module_status[name] = "Running"
+        update_progress_display()
+
+
+def format_json_output(
+    success, logs_generated=0, time_taken=0.0, files=None, error=None
+):
+    """Format output as JSON."""
+    if files is None:
+        files = []
+
+    output = {
+        "success": success,
+        "logs_generated": logs_generated,
+        "time_taken": time_taken,
+        "files": files,
+    }
+
+    if error:
+        output["error"] = {"message": str(error), "type": error.__class__.__name__}
+
+    return json.dumps(output)
+
+
+def generate_module_logs(
+    module_name: str,
+    generator_func: Callable,
+    count: int,
+    output_file: Union[str, Path],
+    llm_format: bool = False,
+    json_output: bool = False,
+) -> int:
+    """Generate logs for a single module.
+
+    Args:
+        module_name: Name of the module
+        generator_func: Function that generates log entries
+        count: Number of log entries to generate
+        output_file: Output file path
+        llm_format: Whether to generate logs in LLM training format
+        json_output: Whether to suppress progress output for JSON mode
+
+    Returns:
+        Number of logs generated
     """
     try:
-        # Create output file
-        output_file = output_path / f"{name}.jsonl"
+        # Add module to order if not present
+        if module_name not in module_order:
+            module_order.append(module_name)
+
+        # Set initial status
+        with progress_lock:
+            module_status[module_name] = "Running"
+            if not json_output:
+                update_progress_display()
+
+        # Create output directory if needed
+        os.makedirs(os.path.dirname(str(output_file)), exist_ok=True)
+
+        # Add file to current run
         current_run_files.add(str(output_file))
 
+        logs_generated = 0
         with open(output_file, "w") as f:
             for _ in range(count):
                 if exit_event.is_set():
+                    with progress_lock:
+                        module_status[module_name] = "Cancelled"
+                        if not json_output:
+                            update_progress_display()
                     break
 
-                # Generate log entry
-                log_entry = func()
+                try:
+                    log_entry = generator_func()
+                    if llm_format:
+                        log_entry = generate_llm_format_log(log_entry)
+                        f.write(json.dumps(log_entry) + "\n")
+                    else:
+                        # For non-LLM format, write as plain text if it's a string,
+                        # otherwise convert to JSON
+                        if isinstance(log_entry, str):
+                            f.write(log_entry + "\n")
+                        else:
+                            f.write(json.dumps(log_entry) + "\n")
+                    logs_generated += 1
 
-                if llm_format:
-                    # Format for LLM training
-                    training_entry = {
-                        "instruction": f"Analyze this {name} log entry and identify any anomalies, patterns, or important information",
-                        "input": log_entry,
-                        "output": generate_analysis(name, log_entry),
-                    }
-                    json.dump(training_entry, f)
-                else:
-                    # Standard log format
-                    json.dump(log_entry, f)
-                f.write("\n")
+                    # Update progress every 10%
+                    if logs_generated % max(1, count // 10) == 0:
+                        with progress_lock:
+                            progress = logs_generated / count
+                            module_status[
+                                module_name
+                            ] = f"[{create_progress_bar(progress)}] {int(progress * 100)}%"
+                            if not json_output:
+                                update_progress_display()
+                                print(
+                                    f"\033[2K\r{module_name}: {module_status[module_name]}",
+                                    end="",
+                                    flush=True,
+                                )
 
-        if not json_output and not exit_event.is_set():
-            print(f"Generated {count} logs for {name}")
+                except Exception as e:
+                    with progress_lock:
+                        module_status[module_name] = f"Error: {str(e)}"
+                        if not json_output:
+                            update_progress_display()
+                    raise
+
+        # Update final status
+        with progress_lock:
+            if not exit_event.is_set():
+                module_status[module_name] = "Complete"
+            if not json_output:
+                update_progress_display()
+                print(f"Generated {logs_generated} logs for {module_name}")
+
+        return logs_generated
 
     except Exception as e:
-        if not json_output:
-            print(f"Error generating logs for {name}: {str(e)}")
+        with progress_lock:
+            module_status[module_name] = f"Error: {str(e)}"
+            if not json_output:
+                update_progress_display()
         raise
 
 
-def output_json(result: dict) -> None:
-    """Output a single line of JSON with generation results.
+def output_json(result: dict):
+    """Format and print JSON output.
 
     Args:
-        result: Dictionary containing the result data
+        result: The result dictionary to output
     """
-    # Add timing information if not present
+    # Clean up any ANSI escape sequences
+    if "error" in result and isinstance(result["error"].get("message"), str):
+        result["error"]["message"] = (
+            result["error"]["message"].replace("\033[", "").replace("\x1b[", "")
+        )
+
+    # Ensure all fields are present
     if "success" in result and result["success"]:
         result.setdefault("time_taken", 0.0)
         result.setdefault(
             "stats",
             {
                 "total_files": len(result.get("files", [])),
-                "avg_logs_per_file": result.get("logs_generated", 0)
-                / len(result.get("files", []))
-                if result.get("files")
-                else 0,
+                "avg_logs_per_file": (
+                    result.get("logs_generated", 0) / len(result.get("files", []))
+                    if result.get("files")
+                    else 0
+                ),
                 "total_size_bytes": sum(
                     Path(f).stat().st_size for f in result.get("files", [])
                 ),
@@ -320,21 +446,26 @@ def output_json(result: dict) -> None:
             {
                 "start_time": datetime.now().isoformat(),
                 "duration_seconds": result.get("time_taken", 0.0),
-                "logs_per_second": result.get("logs_generated", 0)
-                / result.get("time_taken", 1.0)
-                if result.get("time_taken", 0.0) > 0
-                else 0,
+                "logs_per_second": (
+                    result.get("logs_generated", 0) / result.get("time_taken", 1.0)
+                    if result.get("time_taken", 0.0) > 0
+                    else 0
+                ),
             },
         )
         result.setdefault(
             "config",
             {
-                "output_directory": str(Path(result.get("files", [""])[0]).parent)
-                if result.get("files")
-                else None,
-                "file_format": Path(result.get("files", [""])[0]).suffix[1:]
-                if result.get("files")
-                else None,
+                "output_directory": (
+                    str(Path(result.get("files", [""])[0]).parent)
+                    if result.get("files")
+                    else None
+                ),
+                "file_format": (
+                    Path(result.get("files", [""])[0]).suffix[1:]
+                    if result.get("files")
+                    else None
+                ),
             },
         )
     elif "error" in result:
@@ -348,11 +479,185 @@ def output_json(result: dict) -> None:
         )
         result.setdefault("config", {"output_directory": None, "file_format": None})
 
-    click.echo(json.dumps(result), nl=False)
+    # Disable progress display when outputting JSON
+    with progress_lock:
+        click.echo(json.dumps(result), nl=False)
 
 
-@click.command()
-@click.version_option(version="0.6.5", prog_name="Log Generator 3000")
+def generate_llm_format_log(log_entry: Union[str, dict]) -> dict:
+    """Format a log entry for LLM training.
+
+    Args:
+        log_entry: The log entry to format
+
+    Returns:
+        Dictionary containing instruction, input, and output fields
+    """
+    # Convert string log to dictionary
+    if isinstance(log_entry, str):
+        log_entry = {"message": log_entry}
+        instruction = "Analyze this log message and explain its meaning"
+    else:
+        # Set instruction based on log level and type
+        log_level = log_entry.get("level", "INFO").upper()
+        if log_level == "ERROR":
+            instruction = "Analyze this error log and suggest potential solutions"
+        else:
+            instruction = (
+                "Analyze this log entry and identify any anomalies or patterns"
+            )
+
+    # Generate human-readable analysis
+    output_parts = []
+
+    # Add log level if present
+    if "level" in log_entry:
+        output_parts.append(f"This is a {log_entry['level'].lower()}-level log")
+
+    # Add service info
+    if "service" in log_entry:
+        output_parts.append(f"from the {log_entry['service']} service")
+
+    # Add type-specific info
+    if "type" in log_entry:
+        if log_entry.get("service") == "api":
+            if log_entry["type"].lower() == "graphql":
+                output_parts.append("This is a GraphQL API log")
+            elif log_entry["type"].lower() == "rest":
+                output_parts.append("This is a REST API log")
+        else:
+            output_parts.append(
+                f"The {log_entry['type']} event indicates: {log_entry.get('message', 'No message provided')}"
+            )
+    elif "message" in log_entry:
+        output_parts.append(f"The event indicates: {log_entry['message']}")
+
+    # Add any additional context
+    if "status" in log_entry:
+        output_parts.append(f"Status code: {log_entry['status']}")
+    if "duration" in log_entry:
+        output_parts.append(f"Duration: {log_entry['duration']}ms")
+    if "path" in log_entry:
+        output_parts.append(f"Path: {log_entry['path']}")
+    if "method" in log_entry:
+        output_parts.append(f"HTTP Method: {log_entry['method']}")
+
+    # Add timestamp if present
+    if "timestamp" in log_entry:
+        output_parts.append(f"Timestamp: {log_entry['timestamp']}")
+
+    # Add any additional fields not already included
+    for key, value in log_entry.items():
+        if key not in {
+            "level",
+            "service",
+            "type",
+            "message",
+            "status",
+            "duration",
+            "path",
+            "method",
+            "timestamp",
+        }:
+            output_parts.append(f"{key}: {value}")
+
+    # Ensure message is always included in output
+    if "message" in log_entry and not any(
+        "event indicates" in part for part in output_parts
+    ):
+        output_parts.append(f"Message: {log_entry['message']}")
+
+    return {
+        "instruction": instruction,
+        "input": json.dumps(log_entry, indent=2),
+        "output": ". ".join(output_parts),
+    }
+
+
+def create_progress_bar(progress: float, width: int = 10) -> str:
+    """Create a progress bar string.
+
+    Args:
+        progress: Progress value between 0 and 1
+        width: Width of the progress bar
+
+    Returns:
+        Progress bar string
+    """
+    filled = int(progress * width)
+    empty = width - filled - 1  # Subtract 1 for the '>' character
+    return "=" * filled + ">" + " " * empty
+
+
+class CustomCommand(click.Command):
+    """Custom Click command that uses Rich for help display."""
+
+    def get_help(self, ctx: click.Context) -> str:
+        """Show help message with Rich formatting."""
+        if not hasattr(ctx, "_showing_help"):
+            ctx._showing_help = True
+            show_rich_help(ctx)
+            delattr(ctx, "_showing_help")
+            return ""
+        return super().get_help(ctx)
+
+    def parse_args(self, ctx: click.Context, args: list) -> list:
+        """Parse command line arguments.
+
+        Args:
+            ctx: Click context
+            args: Command line arguments
+
+        Returns:
+            Parsed arguments
+        """
+        # If using --generate-config, make --config not required
+        if "--generate-config" in args:
+            for param in self.params:
+                if param.name == "config":
+                    param.required = False
+                    param.type = click.Path(exists=False, dir_okay=False)
+        return super().parse_args(ctx, args)
+
+    def invoke(self, ctx: click.Context) -> None:
+        """Invoke the command with proper error handling."""
+        try:
+            return super().invoke(ctx)
+        except click.exceptions.Exit as e:
+            if e.exit_code == 0:
+                sys.exit(0)
+            else:
+                sys.exit(1)
+        except click.exceptions.Abort:
+            sys.exit(1)
+        except click.UsageError as e:
+            sys.exit(1)
+        except Exception as e:
+            sys.exit(1)
+
+    def __call__(self, *args, **kwargs):
+        """Override call to handle exit codes."""
+        try:
+            return super().__call__(*args, **kwargs)
+        except SystemExit as e:
+            if e.code == 2:  # Convert exit code 2 to 1 for better compatibility
+                sys.exit(1)
+            raise
+        except click.exceptions.Exit as e:
+            if e.exit_code == 0:
+                sys.exit(0)
+            else:
+                sys.exit(1)
+        except click.exceptions.Abort:
+            sys.exit(1)
+        except click.UsageError as e:
+            sys.exit(1)
+        except Exception as e:
+            sys.exit(1)
+
+
+@click.command(cls=CustomCommand)
+@click.version_option(version=__version__)
 @click.option(
     "--generate-config",
     type=click.Path(dir_okay=False),
@@ -362,25 +667,29 @@ def output_json(result: dict) -> None:
     "-c",
     "--count",
     type=click.IntRange(1, 1_000_000),
+    default=100,
     help="Number of log entries per module (default: 100, max: 1,000,000)",
 )
 @click.option(
     "-t",
     "--threads",
-    type=click.IntRange(1, None),
+    type=click.IntRange(min=1),
+    default=os.cpu_count(),
     help="Number of threads to use (default: system CPU count)",
 )
 @click.option(
     "-f",
     "--config",
     type=click.Path(exists=True, dir_okay=False),
+    default="config.json",
     help="Path to config file (default: config.json)",
+    required=False,
 )
 @click.option(
     "-o",
     "--output-dir",
     type=click.Path(file_okay=False),
-    default="logs",
+    default="logs/",
     help="Output directory for log files (default: logs/)",
 )
 @click.option(
@@ -393,280 +702,113 @@ def output_json(result: dict) -> None:
     is_flag=True,
     help="Generate logs in LLM training format (instruction, input, output). Overrides other options for optimal training.",
 )
-@click.pass_context
 def cli(
-    ctx,
     generate_config: Optional[str],
-    count: Optional[int],
-    threads: Optional[int],
-    config: Optional[str],
+    count: int,
+    threads: int,
+    config: str,
     output_dir: str,
     json_output: bool,
     llm_format: bool,
-):
+) -> None:
     """Multi-threaded log generator for testing and development.
 
     Start with: lg3k --generate-config config.json
     Press Ctrl+C to exit gracefully.
     """
-    # Show help if no arguments or help requested
-    if "--help" in sys.argv or len(sys.argv) == 1:
-        show_rich_help(ctx)
-        ctx.exit(0)
-
     try:
         if generate_config:
             if os.path.exists(generate_config):
-                if not json_output:
-                    print(f"Warning: {generate_config} already exists. Skipping.")
-                else:
-                    output_json(
-                        {
-                            "success": False,
-                            "error": {
-                                "message": f"Configuration file already exists: {generate_config}",
-                                "type": "FileExistsError",
-                            },
-                        }
-                    )
-                ctx.exit(1)
-
-            with open(generate_config, "w") as f:
-                json.dump(get_default_config(), f, indent=2)
-            if not json_output:
-                print(f"Configuration file generated: {generate_config}")
-            else:
-                output_json({"success": True, "config_file": generate_config})
-            ctx.exit(0)
-
-        # If --llm-format is used, override other options for optimal training data
-        if llm_format:
-            if config or count or threads:
-                if not json_output:
-                    print(
-                        "Warning: --llm-format overrides -c, -t, and -f options for optimal training data generation"
-                    )
-
-            # Calculate optimal batch size based on available memory
-            try:
-                import psutil
-                import torch
-
-                available_memory = psutil.virtual_memory().available
-                if torch.cuda.is_available():
-                    gpu_memory = torch.cuda.get_device_properties(0).total_memory
-                    # Use 80% of GPU memory for safety
-                    max_batch_size = min(
-                        int((gpu_memory * 0.8) / (2 * 1024 * 1024)), 128
-                    )  # 2MB per sample estimate
-                else:
-                    # Use 40% of system memory for CPU training
-                    max_batch_size = min(
-                        int((available_memory * 0.4) / (2 * 1024 * 1024)), 64
-                    )  # More conservative for CPU
-            except (ImportError, RuntimeError):
-                # Fallback to conservative defaults if can't detect
-                max_batch_size = 32
-
-            # Calculate optimal number of threads based on CPU cores and memory
-            optimal_threads = min(
-                os.cpu_count() or 1,
-                max(1, int(available_memory / (1024 * 1024 * 1024))),
-            )  # 1 thread per GB
-
-            config_data = {
-                "services": ["api", "database", "web_server"],  # Focus on web stack
-                "count": max_batch_size
-                * 100,  # Generate enough samples for multiple epochs
-                "threads": optimal_threads,
-                "llm_format": True,
-                "training": {
-                    "batch_size": max_batch_size,
-                    "sequence_length": 512,  # Standard for instruction tuning
-                    "epochs": 10,  # Default number of epochs
-                    "validation_split": 0.1,  # Hold out 10% for validation
-                    "warmup_steps": max(
-                        100, int(max_batch_size * 0.1)
-                    ),  # Dynamic warmup
-                    "save_steps": max(
-                        50, int(max_batch_size * 0.05)
-                    ),  # Checkpoint frequency
-                    "eval_steps": max(
-                        25, int(max_batch_size * 0.025)
-                    ),  # Evaluation frequency
-                },
-            }
-
-            if not json_output:
-                print("Optimized training configuration:")
-                print(
-                    f"- Batch size: {max_batch_size} (based on available {'GPU' if torch.cuda.is_available() else 'CPU'} memory)"
-                )
-                print(f"- Threads: {optimal_threads} (based on CPU cores and memory)")
-                print(f"- Samples per service: {config_data['count']}")
-                print(
-                    f"- Total samples: {config_data['count'] * len(config_data['services'])}"
-                )
-                print("Generating training data...")
-        else:
-            # Load configuration
-            config_file = config or "config.json"
-            config_data = {}
-            if os.path.exists(config_file):
-                try:
-                    config_data = load_config(config_file)
-                except Exception as e:
-                    if not json_output:
-                        print(f"Error loading configuration: {str(e)}")
-                    else:
-                        output_json(
-                            {
-                                "success": False,
-                                "error": {"message": str(e), "type": type(e).__name__},
-                            }
-                        )
-                    ctx.exit(1)
-            elif not count:  # Only require config if count is not provided
-                if not json_output:
-                    print(f"Configuration file not found: {config_file}")
-                    print("Run with --generate-config to create one.")
-                else:
-                    output_json(
-                        {
-                            "success": False,
-                            "error": {
-                                "message": f"Configuration file not found: {config_file}",
-                                "type": "FileNotFoundError",
-                            },
-                        }
-                    )
-                ctx.exit(1)
-
-        # Create output directory
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        # Load modules
-        active_modules = load_modules()
-        if not active_modules:
-            if not json_output:
-                print("Error: No modules found. Please check your installation.")
-            else:
-                output_json(
-                    {
+                if json_output:
+                    result = {
                         "success": False,
                         "error": {
-                            "message": "No modules found. Please check your installation.",
-                            "type": "ModuleNotFoundError",
+                            "message": f"File {generate_config} already exists",
+                            "type": "FileExistsError",
                         },
                     }
-                )
-            ctx.exit(1)
+                    output_json(result)
+                else:
+                    if HAS_RICH and console is not None:
+                        console.print(
+                            f"[red]Error: {generate_config} already exists[/red]"
+                        )
+                    else:
+                        click.echo(f"Error: {generate_config} already exists", err=True)
+                sys.exit(1)
 
-        # Filter active modules based on config
-        if config_data and "services" in config_data:
-            active_modules = {
-                k: v for k, v in active_modules.items() if k in config_data["services"]
-            }
-            if not active_modules:
-                if not json_output:
-                    print("No active services found in configuration.")
+            # Generate default config
+            with open(generate_config, "w") as f:
+                json.dump(get_default_config(), f, indent=4)
+            if json_output:
+                result = {
+                    "success": True,
+                    "logs_generated": 0,
+                    "time_taken": 0.0,
+                    "files": [generate_config],
+                }
+                output_json(result)
+            else:
+                if HAS_RICH and console is not None:
+                    console.print(
+                        f"[green]Generated config file: {generate_config}[/green]"
+                    )
+                else:
+                    click.echo(f"Generated config file: {generate_config}")
+            sys.exit(0)
+
+        # Process services
+        try:
+            result = process_services(
+                SimpleNamespace(
+                    config=config,
+                    count=count,
+                    threads=threads,
+                    output_dir=output_dir,
+                    json=json_output,
+                    llm_format=llm_format,
+                )
+            )
+
+            if json_output:
+                if isinstance(result, dict):
+                    output_json(result)
+                    sys.exit(0 if result.get("success", False) else 1)
                 else:
                     output_json(
                         {
                             "success": False,
-                            "error": {
-                                "message": "No active services found in configuration",
-                                "type": "ValueError",
-                            },
+                            "error": {"message": "Invalid result", "type": "TypeError"},
                         }
                     )
-                ctx.exit(1)
-
-        # Set up generation parameters
-        log_count = count or config_data.get("count", 100)
-        thread_count = threads or config_data.get("threads", os.cpu_count() or 1)
-
-        # Track timing
-        start_time = datetime.now()
-
-        try:
-            # Clear any previous run files
-            current_run_files.clear()
-
-            if thread_count == 1:
-                for name, func in active_modules.items():
-                    if exit_event.is_set():
-                        break
-                    generate_module_logs(
-                        name, func, log_count, output_path, json_output, llm_format
-                    )
-            else:
-                # Use thread pool for parallel processing
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=thread_count
-                ) as executor:
-                    futures = [
-                        executor.submit(
-                            generate_module_logs,
-                            name,
-                            func,
-                            log_count,
-                            output_path,
-                            json_output,
-                            llm_format,
-                        )
-                        for name, func in active_modules.items()
-                    ]
-                    concurrent.futures.wait(futures)
-
-            time_taken = (datetime.now() - start_time).total_seconds()
-
-            if json_output:
-                output_json(
-                    {
-                        "success": True,
-                        "logs_generated": log_count * len(active_modules),
-                        "time_taken": time_taken,
-                        "files": current_run_files,
-                        "config": {
-                            **config_data,
-                            "output_directory": str(output_path),
-                            "llm_format": llm_format,
-                        },
-                    }
-                )
-            elif llm_format:
-                print(
-                    f"\nGenerated {log_count * len(active_modules)} logs optimized for LLM training"
-                )
-                print(f"Output directory: {output_path}")
-                print("\nNext steps:")
-                print(
-                    "1. Use these logs for training: ollama train llama3.2:1b-instruct-fp16 --training-data logs/*.jsonl"
-                )
-                print("2. Or run the automated training loop from the guide")
-            ctx.exit(0)
+                    sys.exit(1)
+            sys.exit(result)
 
         except KeyboardInterrupt:
-            exit_event.set()
             if json_output:
                 output_json(
                     {
                         "success": False,
                         "error": {
-                            "message": "Generation cancelled",
+                            "message": "Operation cancelled by user",
                             "type": "KeyboardInterrupt",
                         },
-                        "logs_generated": 0,
-                        "time_taken": (datetime.now() - start_time).total_seconds(),
-                        "files": current_run_files,
                     }
                 )
             else:
-                print("\nOperation cancelled by user.")
-            cleanup_files()
-            ctx.exit(1)
+                print("\nOperation cancelled by user")
+            sys.exit(1)
+        except Exception as e:
+            if json_output:
+                output_json(
+                    {
+                        "success": False,
+                        "error": {"message": str(e), "type": type(e).__name__},
+                    }
+                )
+            else:
+                print(f"Error: {str(e)}")
+            sys.exit(1)
 
     except Exception as e:
         if json_output:
@@ -674,15 +816,124 @@ def cli(
                 {
                     "success": False,
                     "error": {"message": str(e), "type": type(e).__name__},
-                    "logs_generated": 0,
-                    "time_taken": 0.0,
-                    "files": current_run_files,
                 }
             )
         else:
             print(f"Error: {str(e)}")
-        cleanup_files()
-        ctx.exit(1)
+        sys.exit(1)
+
+
+def format_json_output(result: dict):
+    """Format and print JSON output.
+
+    Args:
+        result: The result dictionary to output
+    """
+    # Clean up any ANSI escape sequences
+    if "error" in result and isinstance(result["error"].get("message"), str):
+        result["error"]["message"] = (
+            result["error"]["message"].replace("\033[", "").replace("\x1b[", "")
+        )
+    # Disable progress display when outputting JSON
+    with progress_lock:
+        print(json.dumps(result))
+
+
+def process_services(args):
+    """Process services based on command line arguments."""
+    try:
+        # Load configuration
+        if not args.json:
+            print(f"Debug: Loading config from {args.config}")
+        config_data = load_config(args.config)
+        if not args.json:
+            print(f"Debug: Loaded config: {config_data}")
+
+        # Check for active services
+        if not config_data.get("services"):
+            raise ValueError("No active services in configuration")
+
+        # Create output directory
+        if not args.json:
+            print(f"Debug: Creating output directory {args.output_dir}")
+        os.makedirs(args.output_dir, exist_ok=True)
+        if not args.json:
+            print(f"Debug: Output directory exists: {os.path.exists(args.output_dir)}")
+
+        # Load modules
+        if not args.json:
+            print("Debug: Loading modules")
+        modules = load_modules()
+        if not args.json:
+            print(f"Debug: Loaded modules: {list(modules.keys())}")
+
+        # Generate logs
+        files = []
+        logs_generated = 0
+        start_time = time.time()
+
+        for module in config_data["services"]:
+            if module not in modules:
+                raise ModuleNotFoundError(f"Module {module} not found")
+
+            output_file = os.path.join(
+                args.output_dir, f"{module}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
+            output_file += ".jsonl" if args.llm_format else ".log"
+            files.append(output_file)
+            if not args.json:
+                print(f"Debug: Output file is {output_file}")
+
+            # Create parent directory for output file
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            if not args.json:
+                print(
+                    f"Debug: Parent directory exists: {os.path.exists(os.path.dirname(output_file))}"
+                )
+
+            logs = generate_module_logs(
+                module,
+                modules[module],
+                args.count,
+                output_file,
+                args.llm_format,
+                args.json,
+            )
+            logs_generated += logs
+            if not args.json:
+                print(f"Debug: Generated {logs} logs for {module}")
+
+            if not args.json and HAS_RICH and console is not None:
+                console.print(f"[green]Generated {logs} logs for {module}[/green]")
+
+        if args.json:
+            return {
+                "success": True,
+                "logs_generated": logs_generated,
+                "time_taken": time.time() - start_time,
+                "files": files,
+            }
+        elif HAS_RICH and console is not None:
+            console.print(
+                f"[green]Successfully generated {logs_generated} logs across {len(files)} files[/green]"
+            )
+
+        return 0
+
+    except Exception as e:
+        if not args.json:
+            print(f"Debug: Error occurred: {str(e)}")
+        if args.json:
+            return {
+                "success": False,
+                "error": {"message": str(e), "type": type(e).__name__},
+            }
+        else:
+            if HAS_RICH and console is not None:
+                console.print(f"[red]Error: {str(e)}[/red]")
+            else:
+                print(f"Error: {str(e)}")
+            return 1
 
 
 def main():

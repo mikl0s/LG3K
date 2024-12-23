@@ -38,7 +38,10 @@ This will create a configuration file with default settings. The generated file 
         "smarthome"
     ],
     "count": 100,
-    "threads": 4
+    "threads": 4,
+    "simple": false,
+    "llm_format": false,
+    "keep_files": false
 }
 ```
 
@@ -70,6 +73,21 @@ This will create a configuration file with default settings. The generated file 
 - Default: System CPU count
 - Minimum: 1
 
+#### simple
+- Type: Boolean
+- Description: Use simple output mode without rich formatting
+- Default: false
+
+#### llm_format
+- Type: Boolean
+- Description: Generate logs in LLM training format
+- Default: false
+
+#### keep_files
+- Type: Boolean
+- Description: Keep generated files after completion
+- Default: false
+
 ### Using the Configuration File
 Once you have a configuration file, you can use it with LG3K:
 
@@ -80,7 +98,7 @@ lg3k --config config.json
 You can override configuration file settings using command-line options:
 
 ```bash
-lg3k --config config.json --count 1000 --threads 2
+lg3k --config config.json --count 1000 --threads 2 --simple
 ```
 
 ## Programmatic Usage
@@ -103,6 +121,87 @@ from lg3k.modules import (
 # Each module provides a generate_log() function
 log_entry = api.generate_log()
 print(log_entry)
+```
+
+### Error Handling
+
+```python
+from lg3k.main import generate_module_logs, cleanup_files
+
+try:
+    # Generate logs with error handling
+    logs_generated = generate_module_logs(
+        module_name="api",
+        generator=api.generate_log,
+        count=1000,
+        output_file="logs/api.log",
+        llm_format=False
+    )
+    print(f"Generated {logs_generated} logs")
+except KeyboardInterrupt:
+    print("Operation cancelled by user")
+    cleanup_files()  # Clean up partial files
+except Exception as e:
+    print(f"Error: {str(e)}")
+    cleanup_files()  # Clean up partial files
+```
+
+### Progress Tracking
+
+```python
+from lg3k.main import update_progress, format_progress_display
+
+def generate_with_progress(module, count):
+    """Generate logs with progress updates."""
+    for i in range(count):
+        log = module.generate_log()
+        progress = f"{(i+1)/count*100:.0f}%"
+        update_progress(module.__name__, progress)
+        yield log
+
+    # Get formatted progress display
+    progress_display = format_progress_display()
+    print(progress_display)
+```
+
+### LLM Format Generation
+
+```python
+from lg3k.main import generate_llm_format_log
+
+# Generate LLM format log from string
+log_str = "Server started on port 8080"
+llm_log = generate_llm_format_log(log_str)
+print(llm_log)  # Contains instruction, input, output
+
+# Generate LLM format log from dict
+log_dict = {
+    "level": "ERROR",
+    "message": "Database connection failed",
+    "service": "database"
+}
+llm_log = generate_llm_format_log(log_dict)
+print(llm_log)  # Contains detailed analysis
+```
+
+### File Cleanup
+
+```python
+from lg3k.main import cleanup_files, current_run_files
+
+# Track files being generated
+current_run_files.add("logs/api.log")
+current_run_files.add("logs/db.log")
+
+try:
+    # Your log generation code here
+    pass
+except Exception:
+    # Clean up on error
+    cleanup_files(keep_files=False)
+else:
+    # Keep files on success
+    cleanup_files(keep_files=True)
 ```
 
 ### Programmatic Output Mode
@@ -335,3 +434,44 @@ When integrating LG3K into your application, consider these optimization tips:
    - API documentation
    - Integration guides
    - Training materials
+
+## LLM Training Format
+
+LG3K supports generating logs in a format optimized for training Large Language Models (LLMs). This feature is particularly useful when you want to use the generated logs to train or fine-tune an LLM for log analysis tasks.
+
+### Using LLM Format
+
+To generate logs in LLM training format, use the `--llm-format` flag:
+
+```bash
+lg3k --count 1000 --llm-format
+```
+
+This will generate logs in JSONL format (one JSON object per line) with the following structure:
+
+```json
+{
+  "instruction": "Analyze this log entry and identify any anomalies or patterns",
+  "input": "{\"level\": \"ERROR\", \"service\": \"api\", \"message\": \"Connection refused\"}",
+  "output": "This is an error-level log from the api service. The error message indicates: Connection refused."
+}
+```
+
+Each log entry contains:
+- `instruction`: A prompt for the LLM to analyze the log
+- `input`: The original log entry as a JSON string
+- `output`: A human-readable analysis of the log entry
+
+### File Format
+
+When using `--llm-format`, logs are saved with the `.jsonl` extension instead of `.log`. This makes it easy to identify files containing LLM training data and ensures compatibility with common LLM training tools.
+
+### Combining with Other Options
+
+The `--llm-format` flag can be combined with other options:
+
+```bash
+lg3k --count 1000 --threads 4 --llm-format --json
+```
+
+This will generate logs in LLM format while using multiple threads and providing JSON output for the generation status.
