@@ -11,9 +11,9 @@ copyright = "2024, Mikkel Georgsen / Dataløs"
 author = "Mikkel Georgsen"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.7"
+release = "0.7.0"
 # The short X.Y version
-version = "0.6.7"
+version = "0.7.0"
 
 # General configuration
 extensions = [
