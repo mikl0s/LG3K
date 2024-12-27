@@ -404,7 +404,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## **💬 Questions?**
 
-Feel free to open an issue or contact us at `lg3k@datalos.dk`.
+Feel free to open an issue or contact us at `lg3k@dataloes.dk`.
 
 ---
 

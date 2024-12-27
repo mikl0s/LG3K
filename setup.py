@@ -12,7 +12,7 @@ setup(
     long_description_content_type="text/markdown",
     version="0.6.7",
     author="Mikkel Georgsen",
-    author_email="lg3k@datalos.dk",
+    author_email="lg3k@dataloes.dk",
     url="https://github.com/mikl0s/LG3K",
     packages=find_packages(exclude=["tests*", "docs*"]),
     install_requires=[
