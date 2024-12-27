@@ -1,4 +1,4 @@
-# **🌟 Log Generator 3000 (LG3K)**
+# **Log Generator 3000 (LG3K)**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/mikl0s/LG3K/main/logo.png" alt="LG3K Logo - AI generated and AI background removal to make it transparent" width="700">
