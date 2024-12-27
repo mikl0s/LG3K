@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/mikl0s/LG3K/main/logo.png" alt="LG3K Logo - AI generated and AI background removal to make it transparent" width="700">
 </p>
 
-<h1 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
+<h2 align="center">🚀 The ultimate modular log generation tool, designed for modern systems! 🌍</h1>
 
 <p align="center">
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License"></a>
