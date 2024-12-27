@@ -1,6 +1,5 @@
 """Main module for LG3K - Log Generator 3000."""
 
-import concurrent.futures
 import importlib
 import json
 import os
@@ -14,21 +13,21 @@ from types import SimpleNamespace
 from typing import Callable, Dict, Optional, Union
 
 import click
-from click.exceptions import Exit
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 # Try to import Rich, but don't fail if it's not available
 try:
-    from rich.console import Console
-    from rich.progress import Progress, SpinnerColumn, TextColumn
-    from rich.table import Table
-
+    console = Console()
     HAS_RICH = True
 except ImportError:
+    console = None
     HAS_RICH = False
 
 from .utils.config import get_default_config, load_config
 
-__version__ = "0.1.0"
+__version__ = "0.6.6"
 
 # Global lock for progress updates
 progress_lock = threading.Lock()
@@ -623,16 +622,16 @@ class CustomCommand(click.Command):
         """Invoke the command with proper error handling."""
         try:
             return super().invoke(ctx)
-        except click.exceptions.Exit as e:
-            if e.exit_code == 0:
+        except click.exceptions.Exit as exit_error:
+            if exit_error.exit_code == 0:
                 sys.exit(0)
             else:
                 sys.exit(1)
         except click.exceptions.Abort:
             sys.exit(1)
-        except click.UsageError as e:
+        except click.UsageError:
             sys.exit(1)
-        except Exception as e:
+        except Exception:
             sys.exit(1)
 
     def __call__(self, *args, **kwargs):
@@ -643,16 +642,16 @@ class CustomCommand(click.Command):
             if e.code == 2:  # Convert exit code 2 to 1 for better compatibility
                 sys.exit(1)
             raise
-        except click.exceptions.Exit as e:
-            if e.exit_code == 0:
+        except click.exceptions.Exit as exit_error:
+            if exit_error.exit_code == 0:
                 sys.exit(0)
             else:
                 sys.exit(1)
         except click.exceptions.Abort:
             sys.exit(1)
-        except click.UsageError as e:
+        except click.UsageError:
             sys.exit(1)
-        except Exception as e:
+        except Exception:
             sys.exit(1)
 
 
@@ -821,22 +820,6 @@ def cli(
         else:
             print(f"Error: {str(e)}")
         sys.exit(1)
-
-
-def format_json_output(result: dict):
-    """Format and print JSON output.
-
-    Args:
-        result: The result dictionary to output
-    """
-    # Clean up any ANSI escape sequences
-    if "error" in result and isinstance(result["error"].get("message"), str):
-        result["error"]["message"] = (
-            result["error"]["message"].replace("\033[", "").replace("\x1b[", "")
-        )
-    # Disable progress display when outputting JSON
-    with progress_lock:
-        print(json.dumps(result))
 
 
 def process_services(args):
