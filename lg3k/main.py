@@ -306,7 +306,8 @@ def format_json_output(
     if error:
         output["error"] = {"message": str(error), "type": error.__class__.__name__}
 
-    return json.dumps(output)
+    # Print the JSON output
+    print(json.dumps(output))
 
 
 def generate_module_logs(
