@@ -27,7 +27,7 @@ except ImportError:
 
 from .utils.config import get_default_config, load_config
 
-__version__ = "0.6.6"
+__version__ = "0.6.7"
 
 # Global lock for progress updates
 progress_lock = threading.Lock()
