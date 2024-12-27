@@ -207,7 +207,7 @@ lg3k/
 - **JSON Output Mode**: Get structured output in JSON format for easy parsing and automation.
 - **Configuration Generation**: Generate default configuration files with `--generate-config`.
 - **Code Quality**: Enforced by Black, isort, and Flake8 through pre-commit hooks.
-- **100% Test Coverage**: Comprehensive test suite ensuring reliability.
+- **94% Test Coverage**: Comprehensive test suite ensuring reliability.
 - **LLM Training Format**: Generate logs in a format optimized for training Large Language Models.
 - **Rich-Free Operation**: Can run without the `rich` package installed using `--simple` or `--llm` options.
 - **Graceful Error Handling**: Comprehensive error handling with informative messages.
