@@ -3,5 +3,5 @@
 from .main import load_modules
 
 __version__ = "0.6.7"
-__author__ = "mikl0s"
+__author__ = "Mikkel Georgsen"
 __all__ = ["load_modules"]

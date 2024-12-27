@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Project information
 project = "LG3K"
-copyright = "2024, mikl0s"
-author = "mikl0s"
+copyright = "2024, Mikkel Georgsen / Dataløs"
+author = "Mikkel Georgsen"
 
 # The full version, including alpha/beta/rc tags
 release = "0.6.7"
